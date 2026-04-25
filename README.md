@@ -19,10 +19,6 @@ A large-scale benchmark dataset generated with this library has been published o
 - **Size**: 120,000 univariate time series (23.8 GB)
 - **Conference**: Submitted to [ITISE 2026](https://itise.ugr.es/)
 
-The dataset includes:
-- **Generated_Data.zip** (10.2 GB): Time series with single primary properties
-- **combinations.rar** (13.6 GB): Time series with multiple coexisting characteristics
-
 Access: [https://zenodo.org/records/18513505](https://zenodo.org/records/18513505)
 
 ## Installation
