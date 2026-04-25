@@ -14,8 +14,6 @@ authors = [
     { name = "Pelin Erkaya" },
     { name = "Yağmur Türkmen" },
     { name = "İsmail Güzel", email = "ismailgzel@gmail.com" },
-    { name = "Pınar Karagöz" },
-    { name = "Ceylan Yozgatlıgil" },
 ]
 keywords = [
     "time-series",

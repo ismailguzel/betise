@@ -167,6 +167,22 @@ If you use BeTiSe or the published dataset in your research, please cite:
 - **TÜBİTAK** — Grant No. 124F095
 - **METU** Scientific Research Projects — Grant No. GAP-109-2023-11361
 
+## Contributors
+
+| Name | Role |
+|---|---|
+| İsmail Güzel | Library design, implementation & maintenance |
+| Pınar Cemre Yazıcı | Core development |
+| Pelin Erkaya | Core development |
+| Yağmur Türkmen | Core development |
+
+The broader research team (Kerem Gür, Berke Baytak, Pınar Karagöz, Ceylan Yozgatlıgil) contributed to the research project and are credited in the dataset publication.
+
+## Contact
+
+For questions, bug reports, or collaboration inquiries:  
+**İsmail Güzel** — ismailgzel@gmail.com
+
 ## Contributing
 
 Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).

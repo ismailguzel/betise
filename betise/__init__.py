@@ -33,10 +33,7 @@ try:
 except PackageNotFoundError:  # running from source without install
     __version__ = "0.2.0"
 
-__author__ = (
-    "Pınar Cemre Yazıcı, Pelin Erkaya, Yağmur Türkmen, "
-    "İsmail Güzel, Pınar Karagöz, Ceylan Yozgatlıgil"
-)
+__author__ = "Pınar Cemre Yazıcı, Pelin Erkaya, Yağmur Türkmen, İsmail Güzel"
 __license__ = "MIT"
 
 from .core.generator import TimeSeriesGenerator
