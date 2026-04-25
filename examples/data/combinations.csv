@@ -6,7 +6,6 @@ AR	Stationary	Trend: Linear	Anomaly: Point
 AR	Stationary	Trend: Linear	Anomaly: Collective
 AR	Stationary	Trend: Linear	Break: Mean Shift
 AR	Stationary	Trend: Linear	Break: Variance Shift
-AR	Stationary	Trend: Linear	Break: Trend Shift
 AR	Stationary	Trend: Quadratic	
 AR	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
 AR	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
@@ -14,7 +13,6 @@ AR	Stationary	Trend: Quadratic	Anomaly: Point
 AR	Stationary	Trend: Quadratic	Anomaly: Collective
 AR	Stationary	Trend: Quadratic	Break: Mean Shift
 AR	Stationary	Trend: Quadratic	Break: Variance Shift
-AR	Stationary	Trend: Quadratic	Break: Trend Shift
 AR	Stationary	Trend: Cubic	
 AR	Stationary	Trend: Cubic	Seasonality: Single Seasonality
 AR	Stationary	Trend: Cubic	Seasonality: Multiple Seasonality
@@ -22,7 +20,6 @@ AR	Stationary	Trend: Cubic	Anomaly: Point
 AR	Stationary	Trend: Cubic	Anomaly: Collective
 AR	Stationary	Trend: Cubic	Break: Mean Shift
 AR	Stationary	Trend: Cubic	Break: Variance Shift
-AR	Stationary	Trend: Cubic	Break: Trend Shift
 AR	Stationary	Trend: Exponential	
 AR	Stationary	Trend: Exponential	Seasonality: Single Seasonality
 AR	Stationary	Trend: Exponential	Seasonality: Multiple Seasonality
@@ -30,7 +27,6 @@ AR	Stationary	Trend: Exponential	Anomaly: Point
 AR	Stationary	Trend: Exponential	Anomaly: Collective
 AR	Stationary	Trend: Exponential	Break: Mean Shift
 AR	Stationary	Trend: Exponential	Break: Variance Shift
-AR	Stationary	Trend: Exponential	Break: Trend Shift
 AR	Stationary	Seasonality: Single Seasonality	
 AR	Stationary	Seasonality: Single Seasonality	Trend: Linear
 AR	Stationary	Seasonality: Single Seasonality	Trend: Quadratic
@@ -95,10 +91,6 @@ AR	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
 AR	Stationary	Break: Variance Shift	Anomaly: Point
 AR	Stationary	Break: Variance Shift	Anomaly: Collective
 AR	Stationary	Break: Trend Shift	
-AR	Stationary	Break: Trend Shift	Trend: Linear
-AR	Stationary	Break: Trend Shift	Trend: Quadratic
-AR	Stationary	Break: Trend Shift	Trend: Cubic
-AR	Stationary	Break: Trend Shift	Trend: Exponential
 AR	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
 AR	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
 AR	Stationary	Break: Trend Shift	Anomaly: Point
@@ -110,7 +102,6 @@ MA	Stationary	Trend: Linear	Anomaly: Point
 MA	Stationary	Trend: Linear	Anomaly: Collective
 MA	Stationary	Trend: Linear	Break: Mean Shift
 MA	Stationary	Trend: Linear	Break: Variance Shift
-MA	Stationary	Trend: Linear	Break: Trend Shift
 MA	Stationary	Trend: Quadratic	
 MA	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
 MA	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
@@ -118,7 +109,6 @@ MA	Stationary	Trend: Quadratic	Anomaly: Point
 MA	Stationary	Trend: Quadratic	Anomaly: Collective
 MA	Stationary	Trend: Quadratic	Break: Mean Shift
 MA	Stationary	Trend: Quadratic	Break: Variance Shift
-MA	Stationary	Trend: Quadratic	Break: Trend Shift
 MA	Stationary	Trend: Cubic	
 MA	Stationary	Trend: Cubic	Seasonality: Single Seasonality
 MA	Stationary	Trend: Cubic	Seasonality: Multiple Seasonality
@@ -126,7 +116,6 @@ MA	Stationary	Trend: Cubic	Anomaly: Point
 MA	Stationary	Trend: Cubic	Anomaly: Collective
 MA	Stationary	Trend: Cubic	Break: Mean Shift
 MA	Stationary	Trend: Cubic	Break: Variance Shift
-MA	Stationary	Trend: Cubic	Break: Trend Shift
 MA	Stationary	Trend: Exponential	
 MA	Stationary	Trend: Exponential	Seasonality: Single Seasonality
 MA	Stationary	Trend: Exponential	Seasonality: Multiple Seasonality
@@ -134,7 +123,6 @@ MA	Stationary	Trend: Exponential	Anomaly: Point
 MA	Stationary	Trend: Exponential	Anomaly: Collective
 MA	Stationary	Trend: Exponential	Break: Mean Shift
 MA	Stationary	Trend: Exponential	Break: Variance Shift
-MA	Stationary	Trend: Exponential	Break: Trend Shift
 MA	Stationary	Seasonality: Single Seasonality	
 MA	Stationary	Seasonality: Single Seasonality	Trend: Linear
 MA	Stationary	Seasonality: Single Seasonality	Trend: Quadratic
@@ -199,10 +187,6 @@ MA	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
 MA	Stationary	Break: Variance Shift	Anomaly: Point
 MA	Stationary	Break: Variance Shift	Anomaly: Collective
 MA	Stationary	Break: Trend Shift	
-MA	Stationary	Break: Trend Shift	Trend: Linear
-MA	Stationary	Break: Trend Shift	Trend: Quadratic
-MA	Stationary	Break: Trend Shift	Trend: Cubic
-MA	Stationary	Break: Trend Shift	Trend: Exponential
 MA	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
 MA	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
 MA	Stationary	Break: Trend Shift	Anomaly: Point
@@ -214,7 +198,6 @@ ARMA	Stationary	Trend: Linear	Anomaly: Point
 ARMA	Stationary	Trend: Linear	Anomaly: Collective
 ARMA	Stationary	Trend: Linear	Break: Mean Shift
 ARMA	Stationary	Trend: Linear	Break: Variance Shift
-ARMA	Stationary	Trend: Linear	Break: Trend Shift
 ARMA	Stationary	Trend: Quadratic	
 ARMA	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
 ARMA	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
@@ -222,7 +205,6 @@ ARMA	Stationary	Trend: Quadratic	Anomaly: Point
 ARMA	Stationary	Trend: Quadratic	Anomaly: Collective
 ARMA	Stationary	Trend: Quadratic	Break: Mean Shift
 ARMA	Stationary	Trend: Quadratic	Break: Variance Shift
-ARMA	Stationary	Trend: Quadratic	Break: Trend Shift
 ARMA	Stationary	Trend: Cubic	
 ARMA	Stationary	Trend: Cubic	Seasonality: Single Seasonality
 ARMA	Stationary	Trend: Cubic	Seasonality: Multiple Seasonality
@@ -230,7 +212,6 @@ ARMA	Stationary	Trend: Cubic	Anomaly: Point
 ARMA	Stationary	Trend: Cubic	Anomaly: Collective
 ARMA	Stationary	Trend: Cubic	Break: Mean Shift
 ARMA	Stationary	Trend: Cubic	Break: Variance Shift
-ARMA	Stationary	Trend: Cubic	Break: Trend Shift
 ARMA	Stationary	Trend: Exponential	
 ARMA	Stationary	Trend: Exponential	Seasonality: Single Seasonality
 ARMA	Stationary	Trend: Exponential	Seasonality: Multiple Seasonality
@@ -238,7 +219,6 @@ ARMA	Stationary	Trend: Exponential	Anomaly: Point
 ARMA	Stationary	Trend: Exponential	Anomaly: Collective
 ARMA	Stationary	Trend: Exponential	Break: Mean Shift
 ARMA	Stationary	Trend: Exponential	Break: Variance Shift
-ARMA	Stationary	Trend: Exponential	Break: Trend Shift
 ARMA	Stationary	Seasonality: Single Seasonality	
 ARMA	Stationary	Seasonality: Single Seasonality	Trend: Linear
 ARMA	Stationary	Seasonality: Single Seasonality	Trend: Quadratic
@@ -303,10 +283,6 @@ ARMA	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
 ARMA	Stationary	Break: Variance Shift	Anomaly: Point
 ARMA	Stationary	Break: Variance Shift	Anomaly: Collective
 ARMA	Stationary	Break: Trend Shift	
-ARMA	Stationary	Break: Trend Shift	Trend: Linear
-ARMA	Stationary	Break: Trend Shift	Trend: Quadratic
-ARMA	Stationary	Break: Trend Shift	Trend: Cubic
-ARMA	Stationary	Break: Trend Shift	Trend: Exponential
 ARMA	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
 ARMA	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
 ARMA	Stationary	Break: Trend Shift	Anomaly: Point
@@ -318,7 +294,6 @@ White Noise	Stationary	Trend: Linear	Anomaly: Point
 White Noise	Stationary	Trend: Linear	Anomaly: Collective
 White Noise	Stationary	Trend: Linear	Break: Mean Shift
 White Noise	Stationary	Trend: Linear	Break: Variance Shift
-White Noise	Stationary	Trend: Linear	Break: Trend Shift
 White Noise	Stationary	Trend: Quadratic	
 White Noise	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
 White Noise	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
@@ -404,10 +379,6 @@ White Noise	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
 White Noise	Stationary	Break: Variance Shift	Anomaly: Point
 White Noise	Stationary	Break: Variance Shift	Anomaly: Collective
 White Noise	Stationary	Break: Trend Shift	
-White Noise	Stationary	Break: Trend Shift	Trend: Linear
-White Noise	Stationary	Break: Trend Shift	Trend: Quadratic
-White Noise	Stationary	Break: Trend Shift	Trend: Cubic
-White Noise	Stationary	Break: Trend Shift	Trend: Exponential
 White Noise	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
 White Noise	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
 White Noise	Stationary	Break: Trend Shift	Anomaly: Point
