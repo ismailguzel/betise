@@ -178,10 +178,10 @@ def main():
                 continue
 
             if rendered % 50 == 0:
-                print(f"  {rendered}/{total} tamamlandı...")
+                print(f"  {rendered}/{total} done...")
 
-    print(f"\nPDF kaydedildi → {OUTPUT_PDF.resolve()}")
-    print(f"Toplam: {rendered} başarılı, {errors} hata")
+    print(f"\nPDF saved → {OUTPUT_PDF.resolve()}")
+    print(f"Total: {rendered} rendered, {errors} errors")
 
 
 if __name__ == "__main__":

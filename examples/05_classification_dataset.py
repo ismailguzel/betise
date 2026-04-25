@@ -161,7 +161,7 @@ out_path = Path(OUTPUT_ROOT) / OUTPUT_NAME
 out_path.parent.mkdir(parents=True, exist_ok=True)
 
 # Cast object columns to str for consistent PyArrow schema across base types
-for col in combined.select_dtypes(include="object").columns:
+for col in combined.select_dtypes(include=["object", "string"]).columns:
     combined[col] = combined[col].astype(str)
 
 combined.to_parquet(out_path, index=False)

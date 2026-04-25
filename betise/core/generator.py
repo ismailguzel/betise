@@ -760,7 +760,7 @@ class TimeSeriesGenerator:
             # Success — break retry loop
             break
         else:
-            # Tüm denemeler başarısız olduysa, orijinal df'i ve None info'yu döndür
+            # All retries exhausted — return original df with no anomaly info
             print(f"generate_contextual_anomalies failed for n={n}")
             return df, None 
 
