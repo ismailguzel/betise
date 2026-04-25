@@ -1,0 +1,58 @@
+{
+  "output_root":  "generated-dataset/classification",
+  "output_name":  "betise_classification.parquet",
+  "total_per_class": 2000,
+  "fixed_length": 1000,
+  "random_seed":  42,
+
+  "classes": {
+    "stationary": [
+      {"base_series": "ar",          "n": 500, "features": {}},
+      {"base_series": "ma",          "n": 500, "features": {}},
+      {"base_series": "arma",        "n": 500, "features": {}},
+      {"base_series": "white_noise", "n": 500, "features": {}}
+    ],
+
+    "stochastic": [
+      {"base_series": "random_walk",       "n": 400, "features": {}},
+      {"base_series": "random_walk_drift", "n": 400, "features": {}},
+      {"base_series": "ari",               "n": 400, "features": {}},
+      {"base_series": "ima",               "n": 400, "features": {}},
+      {"base_series": "arima",             "n": 400, "features": {}}
+    ],
+
+    "trend": [
+      {"base_series": "ar", "n": 400, "features": {"linear_trend":       {"enabled": true, "direction": "upward"}}},
+      {"base_series": "ar", "n": 400, "features": {"linear_trend":       {"enabled": true, "direction": "downward"}}},
+      {"base_series": "ar", "n": 400, "features": {"quadratic_trend":    {"enabled": true, "direction": "upward"}}},
+      {"base_series": "ar", "n": 400, "features": {"cubic_trend":        {"enabled": true, "direction": "upward"}}},
+      {"base_series": "ar", "n": 400, "features": {"exponential_trend":  {"enabled": true, "direction": "upward"}}}
+    ],
+
+    "seasonality": [
+      {"base_series": "sarma",  "n": 500, "features": {}},
+      {"base_series": "sarima", "n": 500, "features": {}},
+      {"base_series": "ar",     "n": 500, "features": {"single_seasonality":   {"enabled": true}}},
+      {"base_series": "ar",     "n": 500, "features": {"multiple_seasonality": {"enabled": true, "num_components": 2}}}
+    ],
+
+    "volatility": [
+      {"base_series": "arch",   "n": 500, "features": {}},
+      {"base_series": "garch",  "n": 500, "features": {}},
+      {"base_series": "egarch", "n": 500, "features": {}},
+      {"base_series": "aparch", "n": 500, "features": {}}
+    ],
+
+    "anomaly": [
+      {"base_series": "ar", "n": 667, "features": {"point_anomaly":      {"enabled": true, "mode": "single", "location": "random"}}},
+      {"base_series": "ar", "n": 667, "features": {"collective_anomaly": {"enabled": true, "mode": "single", "location": "random"}}},
+      {"base_series": "ar", "n": 666, "features": {"contextual_anomaly": {"enabled": true, "mode": "single", "location": "random"}}}
+    ],
+
+    "structural_break": [
+      {"base_series": "ar", "n": 667, "features": {"mean_shift":     {"enabled": true, "mode": "single", "direction": "up"}}},
+      {"base_series": "ar", "n": 667, "features": {"variance_shift": {"enabled": true, "mode": "single", "direction": "up"}}},
+      {"base_series": "ar", "n": 666, "features": {"trend_shift":    {"enabled": true, "mode": "single", "change_type": "direction_change"}}}
+    ]
+  }
+}

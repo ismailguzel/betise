@@ -1,0 +1,94 @@
+{
+  "random_seed": 42,
+  "output_dir": "generated-dataset",
+  "output_name": "dataset.parquet",
+  "num_series": 1,
+  "length_range": [300, 500],
+  "include_indices": true,
+  "base_series": "ar",
+  "features": {
+    "linear_trend": {
+      "enabled": true,
+      "direction": "upward"
+    },
+    "quadratic_trend": {
+      "enabled": false,
+      "direction": "upward",
+      "location": "center"
+    },
+    "cubic_trend": {
+      "enabled": false,
+      "direction": "upward",
+      "location": "center"
+    },
+    "exponential_trend": {
+      "enabled": false,
+      "direction": "upward"
+    },
+    "arch": {
+      "enabled": false
+    },
+    "garch": {
+      "enabled": false
+    },
+    "egarch": {
+      "enabled": false
+    },
+    "aparch": {
+      "enabled": false
+    },
+    "single_seasonality": {
+      "enabled": false
+    },
+    "multiple_seasonality": {
+      "enabled": false,
+      "num_components": 2
+    },
+    "sarma": {
+      "enabled": false
+    },
+    "sarima": {
+      "enabled": false
+    },
+    "mean_shift": {
+      "enabled": false,
+      "mode": "single",
+      "location": "middle",
+      "direction": "down",
+      "num_breaks": 1
+    },
+    "variance_shift": {
+      "enabled": false,
+      "mode": "single",
+      "location": "middle",
+      "direction": "up",
+      "num_breaks": 1
+    },
+    "trend_shift": {
+      "enabled": false,
+      "mode": "single",
+      "location": "middle",
+      "direction": "up",
+      "num_breaks": 1,
+      "change_type": "direction_change"
+    },
+    "point_anomaly": {
+      "enabled": false,
+      "mode": "single",
+      "location": "middle",
+      "num_anomalies": 1
+    },
+    "collective_anomaly": {
+      "enabled": false,
+      "mode": "single",
+      "location": "middle",
+      "num_anomalies": 1
+    },
+    "contextual_anomaly": {
+      "enabled": false,
+      "mode": "single",
+      "location": "middle",
+      "num_anomalies": 1
+    }
+  }
+}

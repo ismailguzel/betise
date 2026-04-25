@@ -1,0 +1,75 @@
+{
+  "base": {
+    "white_noise": {
+      "sigma": 1.0
+    },
+    "random_walk": {
+      "sigma": 1.0
+    },
+    "random_walk_drift": {
+      "sigma": 1.0,
+      "drift": [0.01, 0.1]
+    }
+  },
+  "volatility": {
+    "arch": {},
+    "garch": {},
+    "egarch": {},
+    "aparch": {}
+  },
+  "seasonality": {
+    "single_seasonality": {
+      "period": [7, 24],
+      "amplitude": [0.5, 2.0]
+    },
+    "multiple_seasonality": {
+      "num_components": 2,
+      "periods": [7, 12, 24, 52],
+      "amplitudes": [0.5, 2.0]
+    },
+    "sarma": {},
+    "sarima": {}
+  },
+  "trends": {
+    "linear_trend": {
+      "slope": [0.01, 0.1],
+      "intercept": [-1.0, 1.0]
+    },
+    "quadratic_trend": {
+      "a": [2.0, 5.0],
+      "b": [-0.1, 0.1],
+      "c": [-1.0, 1.0],
+      "location": "center"
+    },
+    "cubic_trend": {
+      "amplitude": [6.0, 14.0],
+      "location": "center"
+    },
+    "exponential_trend": {
+      "a": [0.5, 1.5],
+      "b": [1.8, 2.8]
+    }
+  },
+  "structural_breaks": {
+    "mean_shift": {
+      "scale_factor": [1.0, 3.0]
+    },
+    "variance_shift": {
+      "scale_factor": [2.0, 5.0]
+    },
+    "trend_shift": {
+      "scale_factor": [1.0, 3.0]
+    }
+  },
+  "anomalies": {
+    "point_anomaly": {
+      "scale_factor": [1.0, 2.0]
+    },
+    "collective_anomaly": {
+      "scale_factor": [1.0, 2.0]
+    },
+    "contextual_anomaly": {
+      "scale_factor": [1.0, 2.0]
+    }
+  }
+}

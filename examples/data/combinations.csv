@@ -1,0 +1,574 @@
+Base	Type	Characteristic 1	Characteristic 2
+AR	Stationary	Trend: Linear	
+AR	Stationary	Trend: Linear	Seasonality: Single Seasonality
+AR	Stationary	Trend: Linear	Seasonality: Multiple Seasonality
+AR	Stationary	Trend: Linear	Anomaly: Point
+AR	Stationary	Trend: Linear	Anomaly: Collective
+AR	Stationary	Trend: Linear	Break: Mean Shift
+AR	Stationary	Trend: Linear	Break: Variance Shift
+AR	Stationary	Trend: Linear	Break: Trend Shift
+AR	Stationary	Trend: Quadratic	
+AR	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
+AR	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
+AR	Stationary	Trend: Quadratic	Anomaly: Point
+AR	Stationary	Trend: Quadratic	Anomaly: Collective
+AR	Stationary	Trend: Quadratic	Break: Mean Shift
+AR	Stationary	Trend: Quadratic	Break: Variance Shift
+AR	Stationary	Trend: Quadratic	Break: Trend Shift
+AR	Stationary	Trend: Cubic	
+AR	Stationary	Trend: Cubic	Seasonality: Single Seasonality
+AR	Stationary	Trend: Cubic	Seasonality: Multiple Seasonality
+AR	Stationary	Trend: Cubic	Anomaly: Point
+AR	Stationary	Trend: Cubic	Anomaly: Collective
+AR	Stationary	Trend: Cubic	Break: Mean Shift
+AR	Stationary	Trend: Cubic	Break: Variance Shift
+AR	Stationary	Trend: Cubic	Break: Trend Shift
+AR	Stationary	Trend: Exponential	
+AR	Stationary	Trend: Exponential	Seasonality: Single Seasonality
+AR	Stationary	Trend: Exponential	Seasonality: Multiple Seasonality
+AR	Stationary	Trend: Exponential	Anomaly: Point
+AR	Stationary	Trend: Exponential	Anomaly: Collective
+AR	Stationary	Trend: Exponential	Break: Mean Shift
+AR	Stationary	Trend: Exponential	Break: Variance Shift
+AR	Stationary	Trend: Exponential	Break: Trend Shift
+AR	Stationary	Seasonality: Single Seasonality	
+AR	Stationary	Seasonality: Single Seasonality	Trend: Linear
+AR	Stationary	Seasonality: Single Seasonality	Trend: Quadratic
+AR	Stationary	Seasonality: Single Seasonality	Trend: Cubic
+AR	Stationary	Seasonality: Single Seasonality	Trend: Exponential
+AR	Stationary	Seasonality: Single Seasonality	Anomaly: Point
+AR	Stationary	Seasonality: Single Seasonality	Anomaly: Collective
+AR	Stationary	Seasonality: Single Seasonality	Anomaly: Contextual
+AR	Stationary	Seasonality: Single Seasonality	Break: Mean Shift
+AR	Stationary	Seasonality: Single Seasonality	Break: Variance Shift
+AR	Stationary	Seasonality: Single Seasonality	Break: Trend Shift
+AR	Stationary	Seasonality: Multiple Seasonality	
+AR	Stationary	Seasonality: Multiple Seasonality	Trend: Linear
+AR	Stationary	Seasonality: Multiple Seasonality	Trend: Quadratic
+AR	Stationary	Seasonality: Multiple Seasonality	Trend: Cubic
+AR	Stationary	Seasonality: Multiple Seasonality	Trend: Exponential
+AR	Stationary	Seasonality: Multiple Seasonality	Anomaly: Point
+AR	Stationary	Seasonality: Multiple Seasonality	Anomaly: Collective
+AR	Stationary	Seasonality: Multiple Seasonality	Anomaly: Contextual
+AR	Stationary	Seasonality: Multiple Seasonality	Break: Mean Shift
+AR	Stationary	Seasonality: Multiple Seasonality	Break: Variance Shift
+AR	Stationary	Seasonality: Multiple Seasonality	Break: Trend Shift
+AR	Stationary	Anomaly: Point	
+AR	Stationary	Anomaly: Point	Trend: Linear
+AR	Stationary	Anomaly: Point	Trend: Quadratic
+AR	Stationary	Anomaly: Point	Trend: Cubic
+AR	Stationary	Anomaly: Point	Trend: Exponential
+AR	Stationary	Anomaly: Point	Seasonality: Single Seasonality
+AR	Stationary	Anomaly: Point	Seasonality: Multiple Seasonality
+AR	Stationary	Anomaly: Point	Break: Mean Shift
+AR	Stationary	Anomaly: Point	Break: Variance Shift
+AR	Stationary	Anomaly: Point	Break: Trend Shift
+AR	Stationary	Anomaly: Collective	
+AR	Stationary	Anomaly: Collective	Trend: Linear
+AR	Stationary	Anomaly: Collective	Trend: Quadratic
+AR	Stationary	Anomaly: Collective	Trend: Cubic
+AR	Stationary	Anomaly: Collective	Trend: Exponential
+AR	Stationary	Anomaly: Collective	Seasonality: Single Seasonality
+AR	Stationary	Anomaly: Collective	Seasonality: Multiple Seasonality
+AR	Stationary	Anomaly: Collective	Break: Mean Shift
+AR	Stationary	Anomaly: Collective	Break: Variance Shift
+AR	Stationary	Anomaly: Collective	Break: Trend Shift
+AR	Stationary	Anomaly: Contextual	
+AR	Stationary	Anomaly: Contextual	Seasonality: Single Seasonality
+AR	Stationary	Anomaly: Contextual	Seasonality: Multiple Seasonality
+AR	Stationary	Break: Mean Shift	
+AR	Stationary	Break: Mean Shift	Trend: Linear
+AR	Stationary	Break: Mean Shift	Trend: Quadratic
+AR	Stationary	Break: Mean Shift	Trend: Cubic
+AR	Stationary	Break: Mean Shift	Trend: Exponential
+AR	Stationary	Break: Mean Shift	Seasonality: Single Seasonality
+AR	Stationary	Break: Mean Shift	Seasonality: Multiple Seasonality
+AR	Stationary	Break: Mean Shift	Anomaly: Point
+AR	Stationary	Break: Mean Shift	Anomaly: Collective
+AR	Stationary	Break: Variance Shift	
+AR	Stationary	Break: Variance Shift	Trend: Linear
+AR	Stationary	Break: Variance Shift	Trend: Quadratic
+AR	Stationary	Break: Variance Shift	Trend: Cubic
+AR	Stationary	Break: Variance Shift	Trend: Exponential
+AR	Stationary	Break: Variance Shift	Seasonality: Single Seasonality
+AR	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
+AR	Stationary	Break: Variance Shift	Anomaly: Point
+AR	Stationary	Break: Variance Shift	Anomaly: Collective
+AR	Stationary	Break: Trend Shift	
+AR	Stationary	Break: Trend Shift	Trend: Linear
+AR	Stationary	Break: Trend Shift	Trend: Quadratic
+AR	Stationary	Break: Trend Shift	Trend: Cubic
+AR	Stationary	Break: Trend Shift	Trend: Exponential
+AR	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
+AR	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
+AR	Stationary	Break: Trend Shift	Anomaly: Point
+AR	Stationary	Break: Trend Shift	Anomaly: Collective
+MA	Stationary	Trend: Linear	
+MA	Stationary	Trend: Linear	Seasonality: Single Seasonality
+MA	Stationary	Trend: Linear	Seasonality: Multiple Seasonality
+MA	Stationary	Trend: Linear	Anomaly: Point
+MA	Stationary	Trend: Linear	Anomaly: Collective
+MA	Stationary	Trend: Linear	Break: Mean Shift
+MA	Stationary	Trend: Linear	Break: Variance Shift
+MA	Stationary	Trend: Linear	Break: Trend Shift
+MA	Stationary	Trend: Quadratic	
+MA	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
+MA	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
+MA	Stationary	Trend: Quadratic	Anomaly: Point
+MA	Stationary	Trend: Quadratic	Anomaly: Collective
+MA	Stationary	Trend: Quadratic	Break: Mean Shift
+MA	Stationary	Trend: Quadratic	Break: Variance Shift
+MA	Stationary	Trend: Quadratic	Break: Trend Shift
+MA	Stationary	Trend: Cubic	
+MA	Stationary	Trend: Cubic	Seasonality: Single Seasonality
+MA	Stationary	Trend: Cubic	Seasonality: Multiple Seasonality
+MA	Stationary	Trend: Cubic	Anomaly: Point
+MA	Stationary	Trend: Cubic	Anomaly: Collective
+MA	Stationary	Trend: Cubic	Break: Mean Shift
+MA	Stationary	Trend: Cubic	Break: Variance Shift
+MA	Stationary	Trend: Cubic	Break: Trend Shift
+MA	Stationary	Trend: Exponential	
+MA	Stationary	Trend: Exponential	Seasonality: Single Seasonality
+MA	Stationary	Trend: Exponential	Seasonality: Multiple Seasonality
+MA	Stationary	Trend: Exponential	Anomaly: Point
+MA	Stationary	Trend: Exponential	Anomaly: Collective
+MA	Stationary	Trend: Exponential	Break: Mean Shift
+MA	Stationary	Trend: Exponential	Break: Variance Shift
+MA	Stationary	Trend: Exponential	Break: Trend Shift
+MA	Stationary	Seasonality: Single Seasonality	
+MA	Stationary	Seasonality: Single Seasonality	Trend: Linear
+MA	Stationary	Seasonality: Single Seasonality	Trend: Quadratic
+MA	Stationary	Seasonality: Single Seasonality	Trend: Cubic
+MA	Stationary	Seasonality: Single Seasonality	Trend: Exponential
+MA	Stationary	Seasonality: Single Seasonality	Anomaly: Point
+MA	Stationary	Seasonality: Single Seasonality	Anomaly: Collective
+MA	Stationary	Seasonality: Single Seasonality	Anomaly: Contextual
+MA	Stationary	Seasonality: Single Seasonality	Break: Mean Shift
+MA	Stationary	Seasonality: Single Seasonality	Break: Variance Shift
+MA	Stationary	Seasonality: Single Seasonality	Break: Trend Shift
+MA	Stationary	Seasonality: Multiple Seasonality	
+MA	Stationary	Seasonality: Multiple Seasonality	Trend: Linear
+MA	Stationary	Seasonality: Multiple Seasonality	Trend: Quadratic
+MA	Stationary	Seasonality: Multiple Seasonality	Trend: Cubic
+MA	Stationary	Seasonality: Multiple Seasonality	Trend: Exponential
+MA	Stationary	Seasonality: Multiple Seasonality	Anomaly: Point
+MA	Stationary	Seasonality: Multiple Seasonality	Anomaly: Collective
+MA	Stationary	Seasonality: Multiple Seasonality	Anomaly: Contextual
+MA	Stationary	Seasonality: Multiple Seasonality	Break: Mean Shift
+MA	Stationary	Seasonality: Multiple Seasonality	Break: Variance Shift
+MA	Stationary	Seasonality: Multiple Seasonality	Break: Trend Shift
+MA	Stationary	Anomaly: Point	
+MA	Stationary	Anomaly: Point	Trend: Linear
+MA	Stationary	Anomaly: Point	Trend: Quadratic
+MA	Stationary	Anomaly: Point	Trend: Cubic
+MA	Stationary	Anomaly: Point	Trend: Exponential
+MA	Stationary	Anomaly: Point	Seasonality: Single Seasonality
+MA	Stationary	Anomaly: Point	Seasonality: Multiple Seasonality
+MA	Stationary	Anomaly: Point	Break: Mean Shift
+MA	Stationary	Anomaly: Point	Break: Variance Shift
+MA	Stationary	Anomaly: Point	Break: Trend Shift
+MA	Stationary	Anomaly: Collective	
+MA	Stationary	Anomaly: Collective	Trend: Linear
+MA	Stationary	Anomaly: Collective	Trend: Quadratic
+MA	Stationary	Anomaly: Collective	Trend: Cubic
+MA	Stationary	Anomaly: Collective	Trend: Exponential
+MA	Stationary	Anomaly: Collective	Seasonality: Single Seasonality
+MA	Stationary	Anomaly: Collective	Seasonality: Multiple Seasonality
+MA	Stationary	Anomaly: Collective	Break: Mean Shift
+MA	Stationary	Anomaly: Collective	Break: Variance Shift
+MA	Stationary	Anomaly: Collective	Break: Trend Shift
+MA	Stationary	Anomaly: Contextual	
+MA	Stationary	Anomaly: Contextual	Seasonality: Single Seasonality
+MA	Stationary	Anomaly: Contextual	Seasonality: Multiple Seasonality
+MA	Stationary	Break: Mean Shift	
+MA	Stationary	Break: Mean Shift	Trend: Linear
+MA	Stationary	Break: Mean Shift	Trend: Quadratic
+MA	Stationary	Break: Mean Shift	Trend: Cubic
+MA	Stationary	Break: Mean Shift	Trend: Exponential
+MA	Stationary	Break: Mean Shift	Seasonality: Single Seasonality
+MA	Stationary	Break: Mean Shift	Seasonality: Multiple Seasonality
+MA	Stationary	Break: Mean Shift	Anomaly: Point
+MA	Stationary	Break: Mean Shift	Anomaly: Collective
+MA	Stationary	Break: Variance Shift	
+MA	Stationary	Break: Variance Shift	Trend: Linear
+MA	Stationary	Break: Variance Shift	Trend: Quadratic
+MA	Stationary	Break: Variance Shift	Trend: Cubic
+MA	Stationary	Break: Variance Shift	Trend: Exponential
+MA	Stationary	Break: Variance Shift	Seasonality: Single Seasonality
+MA	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
+MA	Stationary	Break: Variance Shift	Anomaly: Point
+MA	Stationary	Break: Variance Shift	Anomaly: Collective
+MA	Stationary	Break: Trend Shift	
+MA	Stationary	Break: Trend Shift	Trend: Linear
+MA	Stationary	Break: Trend Shift	Trend: Quadratic
+MA	Stationary	Break: Trend Shift	Trend: Cubic
+MA	Stationary	Break: Trend Shift	Trend: Exponential
+MA	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
+MA	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
+MA	Stationary	Break: Trend Shift	Anomaly: Point
+MA	Stationary	Break: Trend Shift	Anomaly: Collective
+ARMA	Stationary	Trend: Linear	
+ARMA	Stationary	Trend: Linear	Seasonality: Single Seasonality
+ARMA	Stationary	Trend: Linear	Seasonality: Multiple Seasonality
+ARMA	Stationary	Trend: Linear	Anomaly: Point
+ARMA	Stationary	Trend: Linear	Anomaly: Collective
+ARMA	Stationary	Trend: Linear	Break: Mean Shift
+ARMA	Stationary	Trend: Linear	Break: Variance Shift
+ARMA	Stationary	Trend: Linear	Break: Trend Shift
+ARMA	Stationary	Trend: Quadratic	
+ARMA	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
+ARMA	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
+ARMA	Stationary	Trend: Quadratic	Anomaly: Point
+ARMA	Stationary	Trend: Quadratic	Anomaly: Collective
+ARMA	Stationary	Trend: Quadratic	Break: Mean Shift
+ARMA	Stationary	Trend: Quadratic	Break: Variance Shift
+ARMA	Stationary	Trend: Quadratic	Break: Trend Shift
+ARMA	Stationary	Trend: Cubic	
+ARMA	Stationary	Trend: Cubic	Seasonality: Single Seasonality
+ARMA	Stationary	Trend: Cubic	Seasonality: Multiple Seasonality
+ARMA	Stationary	Trend: Cubic	Anomaly: Point
+ARMA	Stationary	Trend: Cubic	Anomaly: Collective
+ARMA	Stationary	Trend: Cubic	Break: Mean Shift
+ARMA	Stationary	Trend: Cubic	Break: Variance Shift
+ARMA	Stationary	Trend: Cubic	Break: Trend Shift
+ARMA	Stationary	Trend: Exponential	
+ARMA	Stationary	Trend: Exponential	Seasonality: Single Seasonality
+ARMA	Stationary	Trend: Exponential	Seasonality: Multiple Seasonality
+ARMA	Stationary	Trend: Exponential	Anomaly: Point
+ARMA	Stationary	Trend: Exponential	Anomaly: Collective
+ARMA	Stationary	Trend: Exponential	Break: Mean Shift
+ARMA	Stationary	Trend: Exponential	Break: Variance Shift
+ARMA	Stationary	Trend: Exponential	Break: Trend Shift
+ARMA	Stationary	Seasonality: Single Seasonality	
+ARMA	Stationary	Seasonality: Single Seasonality	Trend: Linear
+ARMA	Stationary	Seasonality: Single Seasonality	Trend: Quadratic
+ARMA	Stationary	Seasonality: Single Seasonality	Trend: Cubic
+ARMA	Stationary	Seasonality: Single Seasonality	Trend: Exponential
+ARMA	Stationary	Seasonality: Single Seasonality	Anomaly: Point
+ARMA	Stationary	Seasonality: Single Seasonality	Anomaly: Collective
+ARMA	Stationary	Seasonality: Single Seasonality	Anomaly: Contextual
+ARMA	Stationary	Seasonality: Single Seasonality	Break: Mean Shift
+ARMA	Stationary	Seasonality: Single Seasonality	Break: Variance Shift
+ARMA	Stationary	Seasonality: Single Seasonality	Break: Trend Shift
+ARMA	Stationary	Seasonality: Multiple Seasonality	
+ARMA	Stationary	Seasonality: Multiple Seasonality	Trend: Linear
+ARMA	Stationary	Seasonality: Multiple Seasonality	Trend: Quadratic
+ARMA	Stationary	Seasonality: Multiple Seasonality	Trend: Cubic
+ARMA	Stationary	Seasonality: Multiple Seasonality	Trend: Exponential
+ARMA	Stationary	Seasonality: Multiple Seasonality	Anomaly: Point
+ARMA	Stationary	Seasonality: Multiple Seasonality	Anomaly: Collective
+ARMA	Stationary	Seasonality: Multiple Seasonality	Anomaly: Contextual
+ARMA	Stationary	Seasonality: Multiple Seasonality	Break: Mean Shift
+ARMA	Stationary	Seasonality: Multiple Seasonality	Break: Variance Shift
+ARMA	Stationary	Seasonality: Multiple Seasonality	Break: Trend Shift
+ARMA	Stationary	Anomaly: Point	
+ARMA	Stationary	Anomaly: Point	Trend: Linear
+ARMA	Stationary	Anomaly: Point	Trend: Quadratic
+ARMA	Stationary	Anomaly: Point	Trend: Cubic
+ARMA	Stationary	Anomaly: Point	Trend: Exponential
+ARMA	Stationary	Anomaly: Point	Seasonality: Single Seasonality
+ARMA	Stationary	Anomaly: Point	Seasonality: Multiple Seasonality
+ARMA	Stationary	Anomaly: Point	Break: Mean Shift
+ARMA	Stationary	Anomaly: Point	Break: Variance Shift
+ARMA	Stationary	Anomaly: Point	Break: Trend Shift
+ARMA	Stationary	Anomaly: Collective	
+ARMA	Stationary	Anomaly: Collective	Trend: Linear
+ARMA	Stationary	Anomaly: Collective	Trend: Quadratic
+ARMA	Stationary	Anomaly: Collective	Trend: Cubic
+ARMA	Stationary	Anomaly: Collective	Trend: Exponential
+ARMA	Stationary	Anomaly: Collective	Seasonality: Single Seasonality
+ARMA	Stationary	Anomaly: Collective	Seasonality: Multiple Seasonality
+ARMA	Stationary	Anomaly: Collective	Break: Mean Shift
+ARMA	Stationary	Anomaly: Collective	Break: Variance Shift
+ARMA	Stationary	Anomaly: Collective	Break: Trend Shift
+ARMA	Stationary	Anomaly: Contextual	
+ARMA	Stationary	Anomaly: Contextual	Seasonality: Single Seasonality
+ARMA	Stationary	Anomaly: Contextual	Seasonality: Multiple Seasonality
+ARMA	Stationary	Break: Mean Shift	
+ARMA	Stationary	Break: Mean Shift	Trend: Linear
+ARMA	Stationary	Break: Mean Shift	Trend: Quadratic
+ARMA	Stationary	Break: Mean Shift	Trend: Cubic
+ARMA	Stationary	Break: Mean Shift	Trend: Exponential
+ARMA	Stationary	Break: Mean Shift	Seasonality: Single Seasonality
+ARMA	Stationary	Break: Mean Shift	Seasonality: Multiple Seasonality
+ARMA	Stationary	Break: Mean Shift	Anomaly: Point
+ARMA	Stationary	Break: Mean Shift	Anomaly: Collective
+ARMA	Stationary	Break: Variance Shift	
+ARMA	Stationary	Break: Variance Shift	Trend: Linear
+ARMA	Stationary	Break: Variance Shift	Trend: Quadratic
+ARMA	Stationary	Break: Variance Shift	Trend: Cubic
+ARMA	Stationary	Break: Variance Shift	Trend: Exponential
+ARMA	Stationary	Break: Variance Shift	Seasonality: Single Seasonality
+ARMA	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
+ARMA	Stationary	Break: Variance Shift	Anomaly: Point
+ARMA	Stationary	Break: Variance Shift	Anomaly: Collective
+ARMA	Stationary	Break: Trend Shift	
+ARMA	Stationary	Break: Trend Shift	Trend: Linear
+ARMA	Stationary	Break: Trend Shift	Trend: Quadratic
+ARMA	Stationary	Break: Trend Shift	Trend: Cubic
+ARMA	Stationary	Break: Trend Shift	Trend: Exponential
+ARMA	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
+ARMA	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
+ARMA	Stationary	Break: Trend Shift	Anomaly: Point
+ARMA	Stationary	Break: Trend Shift	Anomaly: Collective
+White Noise	Stationary	Trend: Linear	
+White Noise	Stationary	Trend: Linear	Seasonality: Single Seasonality
+White Noise	Stationary	Trend: Linear	Seasonality: Multiple Seasonality
+White Noise	Stationary	Trend: Linear	Anomaly: Point
+White Noise	Stationary	Trend: Linear	Anomaly: Collective
+White Noise	Stationary	Trend: Linear	Break: Mean Shift
+White Noise	Stationary	Trend: Linear	Break: Variance Shift
+White Noise	Stationary	Trend: Linear	Break: Trend Shift
+White Noise	Stationary	Trend: Quadratic	
+White Noise	Stationary	Trend: Quadratic	Seasonality: Single Seasonality
+White Noise	Stationary	Trend: Quadratic	Seasonality: Multiple Seasonality
+White Noise	Stationary	Trend: Quadratic	Anomaly: Point
+White Noise	Stationary	Trend: Quadratic	Anomaly: Collective
+White Noise	Stationary	Trend: Quadratic	Break: Mean Shift
+White Noise	Stationary	Trend: Quadratic	Break: Variance Shift
+White Noise	Stationary	Trend: Cubic	
+White Noise	Stationary	Trend: Cubic	Seasonality: Single Seasonality
+White Noise	Stationary	Trend: Cubic	Seasonality: Multiple Seasonality
+White Noise	Stationary	Trend: Cubic	Anomaly: Point
+White Noise	Stationary	Trend: Cubic	Anomaly: Collective
+White Noise	Stationary	Trend: Cubic	Break: Mean Shift
+White Noise	Stationary	Trend: Cubic	Break: Variance Shift
+White Noise	Stationary	Trend: Exponential	
+White Noise	Stationary	Trend: Exponential	Seasonality: Single Seasonality
+White Noise	Stationary	Trend: Exponential	Seasonality: Multiple Seasonality
+White Noise	Stationary	Trend: Exponential	Anomaly: Point
+White Noise	Stationary	Trend: Exponential	Anomaly: Collective
+White Noise	Stationary	Trend: Exponential	Break: Mean Shift
+White Noise	Stationary	Trend: Exponential	Break: Variance Shift
+White Noise	Stationary	Seasonality: Single Seasonality	
+White Noise	Stationary	Seasonality: Single Seasonality	Trend: Linear
+White Noise	Stationary	Seasonality: Single Seasonality	Trend: Quadratic
+White Noise	Stationary	Seasonality: Single Seasonality	Trend: Cubic
+White Noise	Stationary	Seasonality: Single Seasonality	Trend: Exponential
+White Noise	Stationary	Seasonality: Single Seasonality	Anomaly: Point
+White Noise	Stationary	Seasonality: Single Seasonality	Anomaly: Collective
+White Noise	Stationary	Seasonality: Single Seasonality	Anomaly: Contextual
+White Noise	Stationary	Seasonality: Single Seasonality	Break: Mean Shift
+White Noise	Stationary	Seasonality: Single Seasonality	Break: Variance Shift
+White Noise	Stationary	Seasonality: Single Seasonality	Break: Trend Shift
+White Noise	Stationary	Seasonality: Multiple Seasonality	
+White Noise	Stationary	Seasonality: Multiple Seasonality	Trend: Linear
+White Noise	Stationary	Seasonality: Multiple Seasonality	Trend: Quadratic
+White Noise	Stationary	Seasonality: Multiple Seasonality	Trend: Cubic
+White Noise	Stationary	Seasonality: Multiple Seasonality	Trend: Exponential
+White Noise	Stationary	Seasonality: Multiple Seasonality	Anomaly: Point
+White Noise	Stationary	Seasonality: Multiple Seasonality	Anomaly: Collective
+White Noise	Stationary	Seasonality: Multiple Seasonality	Anomaly: Contextual
+White Noise	Stationary	Seasonality: Multiple Seasonality	Break: Mean Shift
+White Noise	Stationary	Seasonality: Multiple Seasonality	Break: Variance Shift
+White Noise	Stationary	Seasonality: Multiple Seasonality	Break: Trend Shift
+White Noise	Stationary	Anomaly: Point	
+White Noise	Stationary	Anomaly: Point	Trend: Linear
+White Noise	Stationary	Anomaly: Point	Trend: Quadratic
+White Noise	Stationary	Anomaly: Point	Trend: Cubic
+White Noise	Stationary	Anomaly: Point	Trend: Exponential
+White Noise	Stationary	Anomaly: Point	Seasonality: Single Seasonality
+White Noise	Stationary	Anomaly: Point	Seasonality: Multiple Seasonality
+White Noise	Stationary	Anomaly: Point	Break: Mean Shift
+White Noise	Stationary	Anomaly: Point	Break: Variance Shift
+White Noise	Stationary	Anomaly: Point	Break: Trend Shift
+White Noise	Stationary	Anomaly: Collective	
+White Noise	Stationary	Anomaly: Collective	Trend: Linear
+White Noise	Stationary	Anomaly: Collective	Trend: Quadratic
+White Noise	Stationary	Anomaly: Collective	Trend: Cubic
+White Noise	Stationary	Anomaly: Collective	Trend: Exponential
+White Noise	Stationary	Anomaly: Collective	Seasonality: Single Seasonality
+White Noise	Stationary	Anomaly: Collective	Seasonality: Multiple Seasonality
+White Noise	Stationary	Anomaly: Collective	Break: Mean Shift
+White Noise	Stationary	Anomaly: Collective	Break: Variance Shift
+White Noise	Stationary	Anomaly: Collective	Break: Trend Shift
+White Noise	Stationary	Anomaly: Contextual	
+White Noise	Stationary	Anomaly: Contextual	Seasonality: Single Seasonality
+White Noise	Stationary	Anomaly: Contextual	Seasonality: Multiple Seasonality
+White Noise	Stationary	Break: Mean Shift	
+White Noise	Stationary	Break: Mean Shift	Trend: Linear
+White Noise	Stationary	Break: Mean Shift	Trend: Quadratic
+White Noise	Stationary	Break: Mean Shift	Trend: Cubic
+White Noise	Stationary	Break: Mean Shift	Trend: Exponential
+White Noise	Stationary	Break: Mean Shift	Seasonality: Single Seasonality
+White Noise	Stationary	Break: Mean Shift	Seasonality: Multiple Seasonality
+White Noise	Stationary	Break: Mean Shift	Anomaly: Point
+White Noise	Stationary	Break: Mean Shift	Anomaly: Collective
+White Noise	Stationary	Break: Variance Shift	
+White Noise	Stationary	Break: Variance Shift	Trend: Linear
+White Noise	Stationary	Break: Variance Shift	Trend: Quadratic
+White Noise	Stationary	Break: Variance Shift	Trend: Cubic
+White Noise	Stationary	Break: Variance Shift	Trend: Exponential
+White Noise	Stationary	Break: Variance Shift	Seasonality: Single Seasonality
+White Noise	Stationary	Break: Variance Shift	Seasonality: Multiple Seasonality
+White Noise	Stationary	Break: Variance Shift	Anomaly: Point
+White Noise	Stationary	Break: Variance Shift	Anomaly: Collective
+White Noise	Stationary	Break: Trend Shift	
+White Noise	Stationary	Break: Trend Shift	Trend: Linear
+White Noise	Stationary	Break: Trend Shift	Trend: Quadratic
+White Noise	Stationary	Break: Trend Shift	Trend: Cubic
+White Noise	Stationary	Break: Trend Shift	Trend: Exponential
+White Noise	Stationary	Break: Trend Shift	Seasonality: Single Seasonality
+White Noise	Stationary	Break: Trend Shift	Seasonality: Multiple Seasonality
+White Noise	Stationary	Break: Trend Shift	Anomaly: Point
+White Noise	Stationary	Break: Trend Shift	Anomaly: Collective
+RW	Stochastic	Anomaly: Point	
+RW	Stochastic	Anomaly: Point	Break: Mean Shift
+RW	Stochastic	Anomaly: Collective	
+RW	Stochastic	Anomaly: Collective	Break: Mean Shift
+RW	Stochastic	Break: Mean Shift	
+RW	Stochastic	Break: Mean Shift	Anomaly: Point
+RW	Stochastic	Break: Mean Shift	Anomaly: Collective
+RW with Drift	Stochastic	Anomaly: Point	
+RW with Drift	Stochastic	Anomaly: Point	Break: Mean Shift
+RW with Drift	Stochastic	Anomaly: Collective	
+RW with Drift	Stochastic	Anomaly: Collective	Break: Mean Shift
+RW with Drift	Stochastic	Break: Mean Shift	
+RW with Drift	Stochastic	Break: Mean Shift	Anomaly: Point
+RW with Drift	Stochastic	Break: Mean Shift	Anomaly: Collective
+ARI	Stochastic	Anomaly: Point	
+ARI	Stochastic	Anomaly: Point	Break: Mean Shift
+ARI	Stochastic	Anomaly: Collective	
+ARI	Stochastic	Anomaly: Collective	Break: Mean Shift
+ARI	Stochastic	Break: Mean Shift	
+ARI	Stochastic	Break: Mean Shift	Anomaly: Point
+ARI	Stochastic	Break: Mean Shift	Anomaly: Collective
+IMA	Stochastic	Anomaly: Point	
+IMA	Stochastic	Anomaly: Point	Break: Mean Shift
+IMA	Stochastic	Anomaly: Collective	
+IMA	Stochastic	Anomaly: Collective	Break: Mean Shift
+IMA	Stochastic	Break: Mean Shift	
+IMA	Stochastic	Break: Mean Shift	Anomaly: Point
+IMA	Stochastic	Break: Mean Shift	Anomaly: Collective
+ARIMA	Stochastic	Anomaly: Point	
+ARIMA	Stochastic	Anomaly: Point	Break: Mean Shift
+ARIMA	Stochastic	Anomaly: Collective	
+ARIMA	Stochastic	Anomaly: Collective	Break: Mean Shift
+ARIMA	Stochastic	Break: Mean Shift	
+ARIMA	Stochastic	Break: Mean Shift	Anomaly: Point
+ARIMA	Stochastic	Break: Mean Shift	Anomaly: Collective
+SARMA	Seasonal	Anomaly: Point	
+SARMA	Seasonal	Anomaly: Point	Anomaly: Collective
+SARMA	Seasonal	Anomaly: Point	Anomaly: Contextual
+SARMA	Seasonal	Anomaly: Point	Break: Mean Shift
+SARMA	Seasonal	Anomaly: Point	Break: Variance Shift
+SARMA	Seasonal	Anomaly: Point	Break: Trend Shift
+SARMA	Seasonal	Anomaly: Collective	
+SARMA	Seasonal	Anomaly: Collective	Anomaly: Point
+SARMA	Seasonal	Anomaly: Collective	Anomaly: Contextual
+SARMA	Seasonal	Anomaly: Collective	Break: Mean Shift
+SARMA	Seasonal	Anomaly: Collective	Break: Variance Shift
+SARMA	Seasonal	Anomaly: Collective	Break: Trend Shift
+SARMA	Seasonal	Anomaly: Contextual	
+SARMA	Seasonal	Anomaly: Contextual	Anomaly: Point
+SARMA	Seasonal	Anomaly: Contextual	Anomaly: Collective
+SARMA	Seasonal	Anomaly: Contextual	Break: Mean Shift
+SARMA	Seasonal	Anomaly: Contextual	Break: Variance Shift
+SARMA	Seasonal	Anomaly: Contextual	Break: Trend Shift
+SARMA	Seasonal	Break: Mean Shift	
+SARMA	Seasonal	Break: Mean Shift	Anomaly: Point
+SARMA	Seasonal	Break: Mean Shift	Anomaly: Collective
+SARMA	Seasonal	Break: Mean Shift	Anomaly: Contextual
+SARMA	Seasonal	Break: Mean Shift	Break: Variance Shift
+SARMA	Seasonal	Break: Mean Shift	Break: Trend Shift
+SARMA	Seasonal	Break: Variance Shift	
+SARMA	Seasonal	Break: Variance Shift	Anomaly: Point
+SARMA	Seasonal	Break: Variance Shift	Anomaly: Collective
+SARMA	Seasonal	Break: Variance Shift	Anomaly: Contextual
+SARMA	Seasonal	Break: Variance Shift	Break: Mean Shift
+SARMA	Seasonal	Break: Variance Shift	Break: Trend Shift
+SARMA	Seasonal	Break: Trend Shift	
+SARMA	Seasonal	Break: Trend Shift	Anomaly: Point
+SARMA	Seasonal	Break: Trend Shift	Anomaly: Collective
+SARMA	Seasonal	Break: Trend Shift	Anomaly: Contextual
+SARMA	Seasonal	Break: Trend Shift	Break: Mean Shift
+SARMA	Seasonal	Break: Trend Shift	Break: Variance Shift
+SARIMA	Seasonal	Anomaly: Point	
+SARIMA	Seasonal	Anomaly: Point	Anomaly: Collective
+SARIMA	Seasonal	Anomaly: Point	Anomaly: Contextual
+SARIMA	Seasonal	Anomaly: Point	Break: Mean Shift
+SARIMA	Seasonal	Anomaly: Point	Break: Trend Shift
+SARIMA	Seasonal	Anomaly: Collective	
+SARIMA	Seasonal	Anomaly: Collective	Anomaly: Point
+SARIMA	Seasonal	Anomaly: Collective	Anomaly: Contextual
+SARIMA	Seasonal	Anomaly: Collective	Break: Mean Shift
+SARIMA	Seasonal	Anomaly: Collective	Break: Trend Shift
+SARIMA	Seasonal	Anomaly: Contextual	
+SARIMA	Seasonal	Anomaly: Contextual	Anomaly: Point
+SARIMA	Seasonal	Anomaly: Contextual	Anomaly: Collective
+SARIMA	Seasonal	Anomaly: Contextual	Break: Mean Shift
+SARIMA	Seasonal	Anomaly: Contextual	Break: Trend Shift
+SARIMA	Seasonal	Break: Mean Shift	
+SARIMA	Seasonal	Break: Mean Shift	Anomaly: Point
+SARIMA	Seasonal	Break: Mean Shift	Anomaly: Collective
+SARIMA	Seasonal	Break: Mean Shift	Anomaly: Contextual
+SARIMA	Seasonal	Break: Mean Shift	Break: Trend Shift
+SARIMA	Seasonal	Break: Trend Shift	
+SARIMA	Seasonal	Break: Trend Shift	Anomaly: Point
+SARIMA	Seasonal	Break: Trend Shift	Anomaly: Collective
+SARIMA	Seasonal	Break: Trend Shift	Anomaly: Contextual
+SARIMA	Seasonal	Break: Trend Shift	Break: Mean Shift
+ARCH	Volatility	Anomaly: Point	
+ARCH	Volatility	Anomaly: Point	Anomaly: Collective
+ARCH	Volatility	Anomaly: Point	Break: Mean Shift
+ARCH	Volatility	Anomaly: Point	Break: Variance Shift
+ARCH	Volatility	Anomaly: Collective	
+ARCH	Volatility	Anomaly: Collective	Anomaly: Point
+ARCH	Volatility	Anomaly: Collective	Break: Mean Shift
+ARCH	Volatility	Anomaly: Collective	Break: Variance Shift
+ARCH	Volatility	Break: Mean Shift	
+ARCH	Volatility	Break: Mean Shift	Anomaly: Point
+ARCH	Volatility	Break: Mean Shift	Anomaly: Collective
+ARCH	Volatility	Break: Mean Shift	Break: Variance Shift
+ARCH	Volatility	Break: Variance Shift	
+ARCH	Volatility	Break: Variance Shift	Anomaly: Point
+ARCH	Volatility	Break: Variance Shift	Anomaly: Collective
+ARCH	Volatility	Break: Variance Shift	Break: Mean Shift
+GARCH	Volatility	Anomaly: Point	
+GARCH	Volatility	Anomaly: Point	Anomaly: Collective
+GARCH	Volatility	Anomaly: Point	Break: Mean Shift
+GARCH	Volatility	Anomaly: Point	Break: Variance Shift
+GARCH	Volatility	Anomaly: Collective	
+GARCH	Volatility	Anomaly: Collective	Anomaly: Point
+GARCH	Volatility	Anomaly: Collective	Break: Mean Shift
+GARCH	Volatility	Anomaly: Collective	Break: Variance Shift
+GARCH	Volatility	Break: Mean Shift	
+GARCH	Volatility	Break: Mean Shift	Anomaly: Point
+GARCH	Volatility	Break: Mean Shift	Anomaly: Collective
+GARCH	Volatility	Break: Mean Shift	Break: Variance Shift
+GARCH	Volatility	Break: Variance Shift	
+GARCH	Volatility	Break: Variance Shift	Anomaly: Point
+GARCH	Volatility	Break: Variance Shift	Anomaly: Collective
+GARCH	Volatility	Break: Variance Shift	Break: Mean Shift
+EGARCH	Volatility	Anomaly: Point	
+EGARCH	Volatility	Anomaly: Point	Anomaly: Collective
+EGARCH	Volatility	Anomaly: Point	Break: Mean Shift
+EGARCH	Volatility	Anomaly: Point	Break: Variance Shift
+EGARCH	Volatility	Anomaly: Collective	
+EGARCH	Volatility	Anomaly: Collective	Anomaly: Point
+EGARCH	Volatility	Anomaly: Collective	Break: Mean Shift
+EGARCH	Volatility	Anomaly: Collective	Break: Variance Shift
+EGARCH	Volatility	Break: Mean Shift	
+EGARCH	Volatility	Break: Mean Shift	Anomaly: Point
+EGARCH	Volatility	Break: Mean Shift	Anomaly: Collective
+EGARCH	Volatility	Break: Mean Shift	Break: Variance Shift
+EGARCH	Volatility	Break: Variance Shift	
+EGARCH	Volatility	Break: Variance Shift	Anomaly: Point
+EGARCH	Volatility	Break: Variance Shift	Anomaly: Collective
+EGARCH	Volatility	Break: Variance Shift	Break: Mean Shift
+APARCH	Volatility	Anomaly: Point	
+APARCH	Volatility	Anomaly: Point	Anomaly: Collective
+APARCH	Volatility	Anomaly: Point	Break: Mean Shift
+APARCH	Volatility	Anomaly: Point	Break: Variance Shift
+APARCH	Volatility	Anomaly: Collective	
+APARCH	Volatility	Anomaly: Collective	Anomaly: Point
+APARCH	Volatility	Anomaly: Collective	Break: Mean Shift
+APARCH	Volatility	Anomaly: Collective	Break: Variance Shift
+APARCH	Volatility	Break: Mean Shift	
+APARCH	Volatility	Break: Mean Shift	Anomaly: Point
+APARCH	Volatility	Break: Mean Shift	Anomaly: Collective
+APARCH	Volatility	Break: Mean Shift	Break: Variance Shift
+APARCH	Volatility	Break: Variance Shift	
+APARCH	Volatility	Break: Variance Shift	Anomaly: Point
+APARCH	Volatility	Break: Variance Shift	Anomaly: Collective
+APARCH	Volatility	Break: Variance Shift	Break: Mean Shift
