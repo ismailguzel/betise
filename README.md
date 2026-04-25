@@ -94,7 +94,7 @@ examples/
 ├── 05_classification_dataset.py   # Balanced 7-class ML dataset (14,000 series)
 ├── 06_load_and_use.py             # Load parquet → numpy / sklearn / PyTorch
 ├── 07_feature_gallery.py          # PDF gallery: all 15 base types + all 12 features
-├── 08_combinations_gallery.py     # PDF gallery: every base × feature combination (573 plots)
+├── 08_combinations_gallery.py     # PDF gallery: every base × feature combination (545 plots)
 ├── configs/
 │   └── classification_config.json # Class / sub-type config for script 05
 └── data/
@@ -128,7 +128,6 @@ betise/
 ├── examples/                       # Ready-to-run scenarios (see above)
 ├── tests/                          # Test suite
 ├── USAGE.md                        # Full feature & config reference
-├── CHANGELOG.md
 ├── pyproject.toml
 └── requirements.txt
 ```
