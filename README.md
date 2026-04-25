@@ -17,7 +17,7 @@ A large-scale benchmark dataset generated with this library has been published o
 - **Dataset Name**: BeTiSe: A Benchmark Time Series Dataset for Stationarity and Structural Analysis
 - **DOI**: [10.5281/zenodo.18513505](https://doi.org/10.5281/zenodo.18513505)
 - **Size**: 120,000 univariate time series (23.8 GB)
-- **Conference**: Submitted to [KDD 2026 Datasets and Benchmark Track](https://kdd2026.kdd.org/)
+- **Conference**: Submitted to [ITISE 2026](https://itise.ugr.es/)
 
 The dataset includes:
 - **Generated_Data.zip** (10.2 GB): Time series with single primary properties
@@ -165,8 +165,8 @@ If you use BeTiSe or the published dataset in your research, please cite:
 
 ```bibtex
 @dataset{betise2026,
-  author    = {Gür, Kerem and Yazıcı, Pınar Cemre and Erkaya, Pelin and
-               Türkmen, Yağmur and Baytak, Berke and Güzel, İsmail and
+  author    = {Yazıcı, Pınar Cemre and Erkaya, Pelin and
+               Türkmen, Yağmur and Güzel, İsmail and
                Karagöz, Pınar and Yozgatlıgil, Ceylan},
   title     = {{BeTiSe: A Benchmark Time Series Dataset for Stationarity
                 and Structural Analysis}},

@@ -10,12 +10,10 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 authors = [
-    { name = "Kerem Gür" },
     { name = "Pınar Cemre Yazıcı" },
     { name = "Pelin Erkaya" },
     { name = "Yağmur Türkmen" },
-    { name = "Berke Baytak" },
-    { name = "İsmail Güzel", email = "ismail.guzel@tubitak.gov.tr" },
+    { name = "İsmail Güzel", email = "ismailgzel@gmail.com" },
     { name = "Pınar Karagöz" },
     { name = "Ceylan Yozgatlıgil" },
 ]

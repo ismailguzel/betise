@@ -34,8 +34,8 @@ except PackageNotFoundError:  # running from source without install
     __version__ = "0.2.0"
 
 __author__ = (
-    "Kerem Gür, Pınar Cemre Yazıcı, Pelin Erkaya, Yağmur Türkmen, "
-    "Berke Baytak, İsmail Güzel, Pınar Karagöz, Ceylan Yozgatlıgil"
+    "Pınar Cemre Yazıcı, Pelin Erkaya, Yağmur Türkmen, "
+    "İsmail Güzel, Pınar Karagöz, Ceylan Yozgatlıgil"
 )
 __license__ = "MIT"
 
