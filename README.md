@@ -16,7 +16,6 @@ A large-scale benchmark dataset generated with this library has been published o
 
 - **Dataset Name**: BeTiSe: A Benchmark Time Series Dataset for Stationarity and Structural Analysis
 - **DOI**: [10.5281/zenodo.18513505](https://doi.org/10.5281/zenodo.18513505)
-- **Size**: 120,000 univariate time series (23.8 GB)
 - **Conference**: Submitted to [ITISE 2026](https://itise.ugr.es/)
 
 Access: [https://zenodo.org/records/18513505](https://zenodo.org/records/18513505)
