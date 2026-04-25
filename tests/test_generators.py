@@ -14,7 +14,7 @@ LENGTH = 200
 SEED = 42
 
 
-def _gen(base: str) -> "pd.DataFrame":
+def _gen(base: str):
     cfg = load_config(dataset={
         "base_series": base,
         "num_series": 1,
