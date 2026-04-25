@@ -49,21 +49,17 @@ dependencies = [
     "statsmodels>=0.13",
     "arch>=5.0",
     "pyarrow>=7.0",
-]
-
-[project.optional-dependencies]
-viz = [
     "matplotlib>=3.4",
     "tqdm>=4.60",
 ]
+
+[project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "black>=23.0",
     "ruff>=0.1",
     "mypy>=1.0",
-    "matplotlib>=3.4",
-    "tqdm>=4.60",
 ]
 docs = [
     "mkdocs>=1.5",

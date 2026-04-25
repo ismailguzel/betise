@@ -35,12 +35,6 @@ cd betise
 pip install -e .
 ```
 
-For gallery scripts and the introductory notebook, install visualization dependencies too:
-
-```bash
-pip install "betise[viz]"
-```
-
 ## Quick Start
 
 ```python
@@ -152,8 +146,6 @@ Default seed is 42. ARCH/GARCH models may show minor non-determinism (~1–2%) d
 | `statsmodels` | 0.13 | ARIMA/SARIMA generation |
 | `arch` | 5.0 | ARCH/GARCH generation |
 | `pyarrow` | 7.0 | Parquet I/O |
-
-Optional: `matplotlib>=3.4`, `tqdm>=4.60` for gallery scripts and the notebook.
 
 ## Citation
 
