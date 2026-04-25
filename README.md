@@ -165,9 +165,7 @@ If you use BeTiSe or the published dataset in your research, please cite:
 
 ```bibtex
 @dataset{betise2026,
-  author    = {Yazıcı, Pınar Cemre and Erkaya, Pelin and
-               Türkmen, Yağmur and Güzel, İsmail and
-               Karagöz, Pınar and Yozgatlıgil, Ceylan},
+  author    = {Gür, Kerem and Yazıcı, Pınar Cemre and Erkaya, Pelin and Türkmen, Yağmur and Baytak, Berke and Güzel, İsmail and Karagöz, Pınar and Yozgatlıgil, Ceylan}},
   title     = {{BeTiSe: A Benchmark Time Series Dataset for Stationarity
                 and Structural Analysis}},
   year      = {2026},
