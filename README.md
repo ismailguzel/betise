@@ -74,6 +74,8 @@ A large-scale benchmark dataset (120,000 series, 23.8 GB) generated with BeTiSe 
 Full usage guide, config reference, and ready-to-run examples are on GitHub:  
 **[github.com/ismailguzel/betise](https://github.com/ismailguzel/betise)**
 
+The paper appendix (metadata schema, generation templates, LLM prompts, and example figures) is available in [APPENDIX.md](APPENDIX.md).
+
 ## Citation
 
 ```bibtex
