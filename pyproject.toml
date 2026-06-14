@@ -4,15 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "betise"
-version = "0.2.1"
+version = "0.2.2"
 description = "BeTiSe — Benchmark Time Series Generator for synthetic dataset creation"
 readme = "README.md"
 requires-python = ">=3.8"
 license = "MIT"
 authors = [
-    { name = "Pınar Cemre Yazıcı" },
-    { name = "Pelin Erkaya" },
-    { name = "Yağmur Türkmen" },
     { name = "İsmail Güzel", email = "ismailgzel@gmail.com" },
 ]
 keywords = [
