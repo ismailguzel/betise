@@ -78,7 +78,9 @@ Full usage guide, config reference, and ready-to-run examples are on GitHub:
 
 ```bibtex
 @dataset{betise2026,
-  author    = {Kerem R Gür, P. Cemre Yazıcı, Pelin Erkaya, Yağmur Türkmen, Berke Baytak, İsmail Güzel, Pınar Karagöz and Ceylan Yozgatlıgil},
+  author    = {Yazıcı, Pınar Cemre and Erkaya, Pelin and
+               Türkmen, Yağmur and Güzel, İsmail and
+               Karagöz, Pınar and Yozgatlıgil, Ceylan},
   title     = {{BeTiSe: A Benchmark Time Series Dataset for Stationarity
                 and Structural Analysis}},
   year      = {2026},
