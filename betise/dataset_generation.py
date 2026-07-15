@@ -173,13 +173,13 @@ def generate_base_series(
     # Integrated: ari, ima, arima
     if base_series == "ari":
         diff = _sample_value(base_params.get("diff", 1))
-        return ts.generate_stochastic_trend(kind="ari", diff=diff)
+        return ts.generate_stochastic_trend(kind="ari", d=diff)
     if base_series == "ima":
         diff = _sample_value(base_params.get("diff", 1))
-        return ts.generate_stochastic_trend(kind="ima", diff=diff)
+        return ts.generate_stochastic_trend(kind="ima", d=diff)
     if base_series == "arima":
         diff = _sample_value(base_params.get("diff", 1))
-        return ts.generate_stochastic_trend(kind="arima", diff=diff)
+        return ts.generate_stochastic_trend(kind="arima", d=diff)
 
     # Seasonal base: sarma, sarima
     if base_series == "sarma":
@@ -332,16 +332,19 @@ def apply_feature(
 
     if feature_name == "trend_shift":
         p            = params_cfg.get("structural_breaks", {}).get("trend_shift", {})
+        trend_p      = params_cfg.get("trends", {}).get("linear_trend", {})
         mode         = feature_cfg.get("mode", "single")
         sign         = _parse_sign(feature_cfg.get("direction", "up"))
         num_breaks   = _resolve_count(feature_cfg.get("num_breaks"), 2, 4) if mode == "multiple" else 1
         location     = feature_cfg.get("location", "middle") if mode == "single" else None
         scale_factor = _sample_value(p.get("scale_factor", 1.0))
+        slope        = sign * abs(_sample_value(trend_p.get("slope", [0.01, 0.1])))
+        intercept    = _sample_value(trend_p.get("intercept", [-1.0, 1.0]))
         default_change = feature_cfg.get("change_type", "direction_change")
         change_types = _ensure_list(
             feature_cfg.get("change_types", [default_change]), num_breaks, default_change)
         return ts.generate_trend_shift(
-            df, sign=sign, location=location, num_breaks=num_breaks,
+            df, slope=slope, intercept=intercept, location=location, num_breaks=num_breaks,
             change_types=change_types, seasonal_period=state.get("seasonal_period"),
             scale_factor=scale_factor)
 
@@ -363,7 +366,7 @@ def apply_feature(
         location     = feature_cfg.get("location", "middle") if mode == "single" else None
         num_anomalies = _resolve_count(feature_cfg.get("num_anomalies"), 2, 4) if mode == "multiple" else 1
         default_shape = feature_cfg.get("anomaly_shapes", "rectangular")
-        anomaly_shapes = _ensure_list(feature_cfg.get("anomaly_shapes"), [default_shape] , num_anomalies, default_shape)
+        anomaly_shapes = _ensure_list(feature_cfg.get("anomaly_shapes"), num_anomalies, default_shape)
         return ts.generate_collective_anomalies(
             df, num_anomalies=num_anomalies, location=location, 
             anomaly_shapes= anomaly_shapes, scale_factor=scale_factor)
