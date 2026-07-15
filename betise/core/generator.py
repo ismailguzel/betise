@@ -51,7 +51,12 @@ class TimeSeriesGenerator:
             if abs(val) >= exclusion_lower and abs(val) <= exclusion_upper:
                 coefs.append(val)
         return np.array(coefs)
-        
+
+    def z_normalize(self, series):
+        std = np.std(series)
+        if std == 0:
+            return series - np.mean(series)
+        return (series - np.mean(series)) / std
 
     #BASE DISTRIBUTIONS STATIONARY
 
