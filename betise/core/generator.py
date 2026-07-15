@@ -53,10 +53,11 @@ class TimeSeriesGenerator:
         return np.array(coefs)
 
     def z_normalize(self, series):
+        mean = np.mean(series)
         std = np.std(series)
         if std == 0:
-            return series - np.mean(series)
-        return (series - np.mean(series)) / std
+            return series - mean
+        return (series - mean) / std
 
     #BASE DISTRIBUTIONS STATIONARY
 
