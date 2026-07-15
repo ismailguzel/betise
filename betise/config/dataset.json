@@ -82,7 +82,8 @@
       "enabled": false,
       "mode": "single",
       "location": "middle",
-      "num_anomalies": 1
+      "num_anomalies": 1,
+      "anomaly_shapes": ["rectangular"]
     },
     "contextual_anomaly": {
       "enabled": false,

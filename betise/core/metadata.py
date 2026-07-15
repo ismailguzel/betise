@@ -60,6 +60,7 @@ def create_metadata_record(
     volatility_delta=None,
     # === ANOMALY ===
     anomaly_type=None,
+    anomaly_shapes=None,
     anomaly_count=None,
     anomaly_indices=None,
     anomaly_magnitudes=None,
@@ -137,6 +138,7 @@ def create_metadata_record(
         "anomaly_count": anomaly_count,
         "anomaly_indices": anomaly_indices,
         "anomaly_magnitudes": anomaly_magnitudes,
+        "anomaly_shapes": anomaly_shapes,
         # === Break ===
         "break_type": break_type,
         "break_count": break_count,
