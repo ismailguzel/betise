@@ -1,10 +1,14 @@
 """
-Metadata management for time series datasets.
+Metadata management for seasonal time series datasets.
 
-This module contains functions for creating and managing metadata records
-that describe the characteristics of generated time series.
+This module creates metadata records from the info dictionaries returned by:
+- generate_single_seasonality
+- generate_multiple_seasonality
+- generate_sarima_series
+- generate_deterministic_sarma_series
 """
 
+import json
 import numpy as np
 import pandas as pd
 
@@ -14,39 +18,32 @@ def create_metadata_record(
     series_id,
     length,
     label,
-    is_stationary=1,
-    # === NEW: HIERARCHY ===
-    primary_category=None,  # "stationary" | "trend" | "volatility" | ...
-    primary_label=None,
-    sub_category=None,   # "linear_up" | "arch" | ...
-    sub_label=None,
-    # === BASE ===
-    base_series=None,
-    base_process_type=None,
-    order=None,
-    base_coefs=None,
-    # === TREND ===
-    trend_type=None,
-    trend_slope=None,
-    trend_intercept=None,
-    trend_coef_a=None,
-    trend_coef_b=None,
-    trend_coef_c=None,
-    trend_damping_rate=None,
-    # === STOCHASTIC ===
-    stochastic_type=None,
-    difference=None,
-    drift_value=None,
-    arima_ar_order=None,
-    arima_ma_order=None,
-    arima_diff=None,
-    # === SEASONALITY ===
-    is_seasonal=None,
-    seasonality_type=None,
-    seasonality_periods=None,
-    seasonality_amplitudes=None,
-    seasonality_from_base=None,
-    seasonal_difference=None,
+    is_stationary=0,
+
+    # === SEASONAL INFO ===
+    series_type=None,          # info["type"] -> "seasonal"
+    subtype=None,              # info["subtype"] -> single/multiple/SARIMA/SARMA
+    periods=None,
+    period_meanings=None,
+
+    # === FOURIER / SEASONALITY PARAMETERS ===
+    amplitude=None,            # single, SARIMA, SARMA
+    amplitudes=None,           # multiple
+    noise_std=None,
+    scale_factor=None,
+    num_harmonics=None,
+    coefficients=None,         # single, multiple, SARIMA
+    fourier_coefficients=None, # SARMA
+
+    # === SARIMA-SPECIFIC ===
+    diff=None,
+    seasonal_diff=None,
+    unit_root=None,
+    initial_std=None,
+
+    # === SARMA-SPECIFIC ===
+    ar_order=None,
+    ma_order=None,
     seasonal_ar_order=None,
     seasonal_ma_order=None,
     # === VOLATILITY ===
@@ -63,8 +60,8 @@ def create_metadata_record(
     fractional_integrated=None,
     long_memory=None,
     d_parameter=None,
-    ar_order=None,
-    ma_order=None,
+    #ar_order=None,
+    #ma_order=None,
     # === ANOMALY ===
     anomaly_type=None,
     anomaly_shapes=None,
@@ -87,48 +84,44 @@ def create_metadata_record(
     location_contextual=None,
     # === NOISE & ETC ===
     noise_type=None,
-    noise_std=None,
+    #noise_std=None,
     sampling_frequency=None,
 ):
     """
-    Create a non-redundant, hierarchical metadata record for a time series.
+    Create metadata record for seasonal time series.
     """
+
     record = {
+        # === Core ===
         "series_id": series_id,
         "length": length,
         "label": label,
         "is_stationary": is_stationary,
-        "primary_category": primary_category,
-        "primary_label": primary_label,
-        "sub_category": sub_category,
-        "sub_label": sub_label,
-        # === Base Process ===
-        "base_series": base_series,
-        "base_process_type": base_process_type,
-        "order": order,
-        "base_coefs": base_coefs,
-        # === Trend ===
-        "trend_type": trend_type,
-        "trend_slope": trend_slope,
-        "trend_intercept": trend_intercept,
-        "trend_coef_a": trend_coef_a,
-        "trend_coef_b": trend_coef_b,
-        "trend_coef_c": trend_coef_c,
-        "trend_damping_rate": trend_damping_rate,
-        # === Stochastic ===
-        "stochastic_type": stochastic_type,
-        "difference": difference,
-        "drift_value": drift_value,
-        "arima_ar_order": arima_ar_order,
-        "arima_ma_order": arima_ma_order,
-        "arima_diff": arima_diff,
-        # === Seasonality ===
-        "is_seasonal" : is_seasonal,
-        "seasonality_type": seasonality_type,
-        "seasonality_periods": seasonality_periods,
-        "seasonality_amplitudes": seasonality_amplitudes,
-        "seasonality_from_base": seasonality_from_base,
-        "seasonal_difference": seasonal_difference,
+
+        # === Seasonal identity ===
+        "type": series_type,
+        "subtype": subtype,
+        "periods": periods,
+        "period_meanings": period_meanings,
+
+        # === Fourier / seasonality parameters ===
+        "amplitude": amplitude,
+        "amplitudes": amplitudes,
+        "noise_std": noise_std,
+        "scale_factor": scale_factor,
+        "num_harmonics": num_harmonics,
+        "coefficients": coefficients,
+        "fourier_coefficients": fourier_coefficients,
+
+        # === SARIMA-specific ===
+        "diff": diff,
+        "seasonal_diff": seasonal_diff,
+        "unit_root": unit_root,
+        "initial_std": initial_std,
+
+        # === SARMA-specific ===
+        "ar_order": ar_order,
+        "ma_order": ma_order,
         "seasonal_ar_order": seasonal_ar_order,
         "seasonal_ma_order": seasonal_ma_order,
         # === Volatility ===
@@ -177,76 +170,111 @@ def create_metadata_record(
 
 def make_json_serializable(obj):
     """
-    Convert numpy types to Python native types for JSON serialization.
-
-    Parameters
-    ----------
-    obj : any
-        Object to convert
-
-    Returns
-    -------
-    any
-        JSON-serializable version of the object
+    Convert numpy objects to JSON-serializable Python objects.
     """
+
+    if obj is None:
+        return None
+
     if isinstance(obj, (np.integer, np.int_, np.int64, np.int32)):
         return int(obj)
-    elif isinstance(obj, (np.floating, np.float64, np.float32)):
+
+    if isinstance(obj, (np.floating, np.float64, np.float32)):
         return float(obj)
-    elif isinstance(obj, np.ndarray):
-        return obj.tolist()
-    elif isinstance(obj, set):
-        return list(obj)
-    return str(obj)
+
+    if isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
+
+    if isinstance(obj, np.ndarray):
+        return [make_json_serializable(x) for x in obj.tolist()]
+
+    if isinstance(obj, (list, tuple)):
+        return [make_json_serializable(x) for x in obj]
+
+    if isinstance(obj, set):
+        return [make_json_serializable(x) for x in sorted(obj)]
+
+    if isinstance(obj, dict):
+        return {
+            str(make_json_serializable(k)): make_json_serializable(v)
+            for k, v in obj.items()
+        }
+
+    return obj
+
+
+def metadata_value_to_cell(value):
+    """
+    Convert metadata values into dataframe-cell-friendly values.
+
+    Scalars stay as scalars.
+    Lists/dicts become JSON strings.
+    """
+
+    value = make_json_serializable(value)
+
+    if value is None:
+        return None
+
+    if isinstance(value, (int, float, str, bool)):
+        return value
+
+    return json.dumps(value, ensure_ascii=False)
 
 
 def get_metadata_columns_defaults():
     """
     Get metadata column names and default values.
-
-    Returns
-    -------
-    tuple
-        (column_names, default_record)
     """
-    dummy = create_metadata_record(series_id=0, length=0, label="", is_stationary=1)
+
+    dummy = create_metadata_record(
+        series_id=0,
+        length=0,
+        label="",
+        is_stationary=0
+    )
+
     return list(dummy.keys()), dummy
 
 
 def attach_metadata_columns_to_df(df, metadata_record):
     """
-    Attach metadata columns to a DataFrame.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame containing time series data
-    metadata_record : dict
-        Metadata record to attach
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with metadata columns attached
+    Attach metadata columns to a generated time series dataframe.
     """
+
+    df = df.copy()
+
     metadata_cols, default_record = get_metadata_columns_defaults()
 
     for col in metadata_cols:
         val = metadata_record.get(col, default_record[col])
+        df[col] = metadata_value_to_cell(val)
 
-        if isinstance(val, (int, float, str)):
-            df[col] = val
-        else:
-            df[col] = str(val)
+    df["label"] = metadata_record["label"]
 
-    df['label'] = metadata_record['label']
-    
-    core_cols = ['series_id', 'time', 'data', 'label']
-    meta_cols = [col for col in metadata_cols if col not in core_cols and col in df.columns]
-    final_cols_order = ['series_id', 'time', 'data'] + meta_cols + ['label']
-    
-    final_cols_in_df = [col for col in final_cols_order if col in df.columns]
-    
+    core_cols = ["series_id", "time", "data"]
+
+    optional_series_cols = [
+        "seasonal_diff"
+    ]
+
+    meta_cols = [
+        col for col in metadata_cols
+        if col not in core_cols + ["label"] and col in df.columns
+    ]
+
+    final_cols_order = (
+        core_cols
+        + [col for col in optional_series_cols if col in df.columns]
+        + meta_cols
+        + ["label"]
+    )
+
+    final_cols_in_df = [
+        col for col in final_cols_order
+        if col in df.columns
+    ]
+
     df = df[final_cols_in_df]
-    return df
 
+    return df

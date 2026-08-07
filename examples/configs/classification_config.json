@@ -32,8 +32,8 @@
     "seasonality": [
       {"base_series": "sarma",  "n": 500, "features": {}},
       {"base_series": "sarima", "n": 500, "features": {}},
-      {"base_series": "ar",     "n": 500, "features": {"single_seasonality":   {"enabled": true}}},
-      {"base_series": "ar",     "n": 500, "features": {"multiple_seasonality": {"enabled": true, "num_components": 2}}}
+      {"base_series": "single_seasonality", "n": 500, "features": {}},
+      {"base_series": "multiple_seasonality", "n": 500, "features": {}}
     ],
 
     "volatility": [

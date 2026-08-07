@@ -7,22 +7,22 @@ processes. Organised into six phases so each combination can be loaded and
 studied independently.
 
 Phase breakdown:
-  1 — Pure base processes      : 16 bases × 3 lengths × 22 series       = 1,056
-  2 — Base + deterministic trend:  8 bases × 5 trends × 3 lengths × 9  = 1,080
-  3 — Base + anomaly           :  6 bases × 3 types × 3 lengths × 11   =   594
-  4 — Base + structural break  :  6 bases × 3 types × 3 lengths × 11   =   594
-  5 — Base + seasonality       :  4 bases × 2 types × 3 lengths × 11   =   264
+  1 — Pure base processes      : 18 bases × 3 lengths × 22 series       = 1,188
+  2 — Base + deterministic trend: 10 bases × 5 trends × 3 lengths × 9  = 1,350
+  3 — Base + anomaly           :  10 bases × 2 types × 3 lengths × 11   =   660
+  4 - Seasonal base + contextual anomaly:  4 bases × 1 type × 3 lengths × 11   =   132
+  5 — Base + structural break  :  10 bases × 3 types × 3 lengths × 11   =   594
   6 — Stochastic + volatility  :  5 bases × 4 types × 3 lengths × 11   =   660
   ─────────────────────────────────────────────────────────────────────
-  Total                                                                  ≈ 4,182
+  Total                                                                  ≈ 4,584
 
 Output layout:
   generated-dataset/feature_suite/
     phase1_pure/<base>/short.parquet  medium.parquet  long.parquet
     phase2_trend/<trend>/<base>/...
     phase3_anomaly/<type>/<base>/...
-    phase4_break/<type>/<base>/...
-    phase5_seasonality/<type>/<base>/...
+    phase4_contextual_anomaly/<type>/<base>/...
+    phase5_break/<type>/<base>/...
     phase6_volatility/<type>/<base>/...
 
 Run:
@@ -88,7 +88,7 @@ N = 22
 BASE_TYPES = [
     "ar", "ma", "arma", "white_noise",
     "random_walk", "random_walk_drift", "ari", "ima", "arima",
-    "sarma", "sarima",
+    "sarma", "sarima", "single_seasonality", "multiple_seasonality",
     "arch", "garch", "egarch", "aparch",
     "arfima",
 ]
@@ -108,7 +108,7 @@ for base in BASE_TYPES:
 # ── Phase 2: Base + deterministic trend ──────────────────────────────────────
 print("\n=== Phase 2: Base + deterministic trend ===")
 N = 9
-TREND_BASES = ["ar", "ma", "arma", "white_noise", "random_walk", "ari", "ima", "arima"]
+TREND_BASES = ["ar", "ma", "arma", "white_noise", "random_walk", "ari", "ima", "arima","single_seasonality", "multiple_seasonality","sarma", "sarima"]
 TRENDS = [
     ("linear_up",    {"linear_trend":      {"enabled": True, "direction": "upward"}}),
     ("linear_down",  {"linear_trend":      {"enabled": True, "direction": "downward"}}),
@@ -133,12 +133,11 @@ for base in TREND_BASES:
 # ── Phase 3: Base + anomaly ───────────────────────────────────────────────────
 print("\n=== Phase 3: Base + anomaly ===")
 N = 11
-ANOMALY_BASES = ["ar", "ma", "arma", "white_noise", "random_walk", "arima"]
+ANOMALY_BASES = ["ar", "ma", "arma", "white_noise", "random_walk", "arima", "single_seasonality", "multiple_seasonality","sarma", "sarima"]
 ANOMALIES = [
     ("point",      {"point_anomaly":      {"enabled": True, "mode": "single", "location": "random"}}),
     ("collective", {"collective_anomaly": {"enabled": True, "mode": "single", "location": "random"}}),
-    ("contextual", {"contextual_anomaly": {"enabled": True, "mode": "single", "location": "random"}}),
-]
+    ]
 for base in ANOMALY_BASES:
     for anomaly_name, feat in ANOMALIES:
         for bucket_label, length_range in LENGTH_BUCKETS:
@@ -153,10 +152,32 @@ for base in ANOMALY_BASES:
             )
             total += N
 
-# ── Phase 4: Base + structural break ─────────────────────────────────────────
-print("\n=== Phase 4: Base + structural break ===")
+
+# ── Phase 4: Seasonal base + contextual anomaly ───────────────────────────────────────────────
+print("\n=== Phase 4: Seasonal base + contextual anomaly ===")
 N = 11
-BREAK_BASES = ["ar", "ma", "arma", "white_noise", "random_walk", "arima"]
+SEASONAL_BASES = ["single_seasonality", "multiple_seasonality", "sarma", "sarima"]
+CONTEXTUAL_ANOMALY = [
+    ("contextual",      {"contextual_anomaly":      {"enabled": True, "mode": "single", "location": "random"}})
+]
+for base in SEASONAL_BASES:
+    for anomaly_name, feat in CONTEXTUAL_ANOMALY:
+        for bucket_label, length_range in LENGTH_BUCKETS:
+            print(f"  {base:20s} + anomaly:{anomaly_name:12s} | {bucket_label}")
+            _run(
+                base=base,
+                feature_overrides=feat,
+                length_range=length_range,
+                n=N,
+                subfolder=f"phase4_contextual_anomaly/{anomaly_name}/{base}",
+                filename=f"{bucket_label}.parquet",
+            )
+            total += N
+
+# ── Phase 5: Base + structural break ─────────────────────────────────────────
+print("\n=== Phase 5: Base + structural break ===")
+N = 11
+BREAK_BASES = ["ar", "ma", "arma", "white_noise", "random_walk", "arima", "single_seasonality", "multiple_seasonality","sarma", "sarima"]
 BREAKS = [
     ("mean_shift",     {"mean_shift":     {"enabled": True, "mode": "single", "direction": "up"}}),
     ("variance_shift", {"variance_shift": {"enabled": True, "mode": "single", "direction": "up"}}),
@@ -171,29 +192,7 @@ for base in BREAK_BASES:
                 feature_overrides=feat,
                 length_range=length_range,
                 n=N,
-                subfolder=f"phase4_break/{break_name}/{base}",
-                filename=f"{bucket_label}.parquet",
-            )
-            total += N
-
-# ── Phase 5: Base + seasonality ──────────────────────────────────────────────
-print("\n=== Phase 5: Base + seasonality ===")
-N = 11
-SEASONAL_BASES = ["ar", "ma", "arma", "white_noise"]
-SEASONAL_FEATURES = [
-    ("single",   {"single_seasonality":   {"enabled": True}}),
-    ("multiple", {"multiple_seasonality": {"enabled": True, "num_components": 2}}),
-]
-for base in SEASONAL_BASES:
-    for seasonal_name, feat in SEASONAL_FEATURES:
-        for bucket_label, length_range in LENGTH_BUCKETS:
-            print(f"  {base:20s} + seasonality:{seasonal_name:8s} | {bucket_label}")
-            _run(
-                base=base,
-                feature_overrides=feat,
-                length_range=length_range,
-                n=N,
-                subfolder=f"phase5_seasonality/{seasonal_name}/{base}",
+                subfolder=f"phase5_break/{break_name}/{base}",
                 filename=f"{bucket_label}.parquet",
             )
             total += N
