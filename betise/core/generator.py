@@ -3,10 +3,10 @@ import pandas as pd
 import random
 from numpy.polynomial import Polynomial
 from statsmodels.tsa.arima_process import ArmaProcess
-from statsmodels.tsa.statespace.sarimax import SARIMAX
 from arch import arch_model
 from statsmodels.tsa.seasonal import STL,MSTL
 from betise.utils.arfima_simulator import ARFIMA_sim
+from scipy.signal import fftconvolve, lfilter
 
 class TimeSeriesGenerator:
     def __init__(self, length=None):
@@ -24,8 +24,11 @@ class TimeSeriesGenerator:
         'fractional_process': self.generate_fractional_process,
         'single_seasonality': self.generate_single_seasonality,
         'multiple_seasonality': self.generate_multiple_seasonality,
-        'sarima_seasonality': self.generate_sarima_series,
-        'sarma_seasonality': self.generate_sarma_series,
+        'pure_sarima_seasonality': self.generate_pure_sarima,
+        'pure_sarma_seasonality': self.generate_pure_sarma,
+        'deterministic_sarma_seasonality': self.generate_deterministic_sarma,
+        'deterministic_sarima_seasonality': self.generate_deterministic_sarima,
+        'seasonal_unit_root_fourier': self.generate_seasonal_unit_root_fourier,
         'single_point_anomaly' : self.generate_point_anomaly,
         'multiple_point_anomalies': self.generate_point_anomalies,
         'collective_anomalies': self.generate_collective_anomalies,
@@ -70,15 +73,57 @@ class TimeSeriesGenerator:
                 break
         return order, coefs
 
-    def generate_ar_series(self, length, noise_std = None):
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
-        order,coefs = self.generate_ar_params()
-        info = {'type': 'base_series', 'subtype': 'AR', 'ar_order': order, 'ar_coefs': coefs} 
-        ar = np.r_[1, -np.array(coefs)]  # leading 1 and negate the coefficients
-        ma = np.r_[1]  # MA coefficients are just [1] for a pure AR process
+    def generate_ar_series(
+        self,
+        length,
+        noise_std=None,
+        innovations=None
+    ):
+        order, coefs = self.generate_ar_params()
+
+        info = {
+            'type': 'base_series',
+            'subtype': 'AR',
+            'ar_order': order,
+            'ar_coefs': coefs
+        }
+
+        ar = np.r_[1, -np.array(coefs)]
+        ma = np.array([1])
+
         ar_process = ArmaProcess(ar, ma)
-        series = ar_process.generate_sample(nsample=length)
-        series = series + np.random.normal(0,noise_std,length)
+
+        # Standard AR:
+        # use Gaussian innovations generated internally.
+        if innovations is None:
+            noise_std = (
+                noise_std
+                if noise_std is not None
+                else np.random.uniform(0.1, 1.5)
+            )
+
+            series = ar_process.generate_sample(
+                nsample=length,
+                scale=noise_std
+            )
+
+        # AR + another innovation mechanism
+        # e.g. AR + GARCH
+        else:
+            innovations = np.asarray(innovations)
+
+            if len(innovations) != length:
+                raise ValueError(
+                    f"innovations length must match series length. "
+                    f"Expected {length}, got {len(innovations)}."
+                )
+
+            series = ar_process.generate_sample(
+                nsample=length,
+                scale=1.0,
+                distrvs=lambda size: innovations
+            )
+
         return series, info
             
     def generate_ma_params(self, order_range=(1, 5), coef_range=(-0.9, 0.9)):
@@ -92,15 +137,57 @@ class TimeSeriesGenerator:
                 break
         return order, coefs
 
-    def generate_ma_series(self, length, noise_std = None):
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
-        order,coefs = self.generate_ma_params()
-        info = {'type': 'base_series','subtype': 'MA', 'ma_order': order, 'ma_coefs': coefs}
-        ar = np.r_[1]  # AR coefficients are just [1] for a pure MA process
-        ma = np.r_[1, np.array(coefs)]  # leading 1 for the MA coefficients
-        arma_process = ArmaProcess(ar, ma)
-        series = arma_process.generate_sample(nsample=length)
-        series = series + np.random.normal(0,noise_std,length)
+    def generate_ma_series(
+        self,
+        length,
+        noise_std=None,
+        innovations=None
+    ):
+        order, coefs = self.generate_ma_params()
+
+        info = {
+            'type': 'base_series',
+            'subtype': 'MA',
+            'ma_order': order,
+            'ma_coefs': coefs
+        }
+
+        ar = np.array([1])
+        ma = np.r_[1, np.array(coefs)]
+
+        ma_process = ArmaProcess(ar, ma)
+
+        # Standard MA:
+        # Gaussian innovations are generated internally.
+        if innovations is None:
+            noise_std = (
+                noise_std
+                if noise_std is not None
+                else np.random.uniform(0.1, 1.5)
+            )
+
+            series = ma_process.generate_sample(
+                nsample=length,
+                scale=noise_std
+            )
+
+        # MA + another innovation mechanism
+        # e.g. MA + GARCH
+        else:
+            innovations = np.asarray(innovations)
+
+            if len(innovations) != length:
+                raise ValueError(
+                    f"innovations length must match series length. "
+                    f"Expected {length}, got {len(innovations)}."
+                )
+
+            series = ma_process.generate_sample(
+                nsample=length,
+                scale=1.0,
+                distrvs=lambda size: innovations
+            )
+
         return series, info
 
     def generate_arma_params(self, order_range=(1, 5), coef_range=(-0.9, 0.9)):
@@ -116,15 +203,59 @@ class TimeSeriesGenerator:
                 break
         return ar_order, ma_order, ar_coefs, ma_coefs
 
-    def generate_arma_series(self, length, noise_std = None):
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
-        ar_order,ma_order,ar_coefs,ma_coefs = self.generate_arma_params()
-        info = {'type': 'base_series', 'subtype': 'ARMA', 'ar_order': ar_order, 'ar_coefs': ar_coefs, 'ma_order': ma_order, 'ma_coefs': ma_coefs}
+    def generate_arma_series(
+        self,
+        length,
+        noise_std=None,
+        innovations=None
+    ):
+        ar_order, ma_order, ar_coefs, ma_coefs = self.generate_arma_params()
+
+        info = {
+            'type': 'base_series',
+            'subtype': 'ARMA',
+            'ar_order': ar_order,
+            'ar_coefs': ar_coefs,
+            'ma_order': ma_order,
+            'ma_coefs': ma_coefs
+        }
+
         ar = np.r_[1, -np.array(ar_coefs)]
         ma = np.r_[1, np.array(ma_coefs)]
+
         arma_process = ArmaProcess(ar, ma)
-        series = arma_process.generate_sample(nsample=length)
-        series = series + np.random.normal(0,noise_std,length)
+
+        # Standard ARMA:
+        # Gaussian innovations are generated internally.
+        if innovations is None:
+            noise_std = (
+                noise_std
+                if noise_std is not None
+                else np.random.uniform(0.1, 1.5)
+            )
+
+            series = arma_process.generate_sample(
+                nsample=length,
+                scale=noise_std
+            )
+
+        # ARMA + another innovation mechanism
+        # e.g. ARMA + GARCH
+        else:
+            innovations = np.asarray(innovations)
+
+            if len(innovations) != length:
+                raise ValueError(
+                    f"innovations length must match series length. "
+                    f"Expected {length}, got {len(innovations)}."
+                )
+
+            series = arma_process.generate_sample(
+                nsample=length,
+                scale=1.0,
+                distrvs=lambda size: innovations
+            )
+
         return series, info
 
     def generate_white_noise(self, length, noise_std = None):
@@ -151,32 +282,112 @@ class TimeSeriesGenerator:
 
         return p, q, ar_coefs, ma_coefs
 
-    def generate_arima_series(self, length, d= 1, const=False, drift=None, noise_std = None):
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
+    def generate_arima_series(
+        self,
+        length,
+        d=1,
+        const=False,
+        drift=None,
+        noise_std=None,
+        innovations=None
+    ):
+        if d not in {1, 2}:
+            raise ValueError(
+                "ARIMA differencing order d must be 1 or 2."
+            )
+
         p, q, ar_coefs, ma_coefs = self.generate_arima_params()
 
         ar = np.r_[1, -ar_coefs]
         ma = np.r_[1, ma_coefs]
 
-        if d == 1: 
-            unit_root_label = "1_unit_root"
-        elif d == 2:
-            unit_root_label = "2_unit_root"
+        unit_root_label = ("1_unit_root" if d == 1 else "2_unit_root")
 
-        info = {'type': 'trend', 'subtype' : 'stochastic_ARIMA', 'unit_root': unit_root_label,
-                 'ar_order': p, 'ar_coefs': ar_coefs, 'ma_order': q, 'ma_coefs': ma_coefs, 'diff': d}
-        arma_process = ArmaProcess(ar, ma)
-        arma_sample = arma_process.generate_sample(nsample=length)
+        arma_process = ArmaProcess(
+            ar,
+            ma
+        )
 
-        # Integrate (difference 'd' times)
-        series = arma_sample
+        # -----------------------------------------------------
+        # Standalone ARIMA:
+        # Gaussian innovations generated internally
+        # -----------------------------------------------------
+        if innovations is None:
+
+            noise_std = (
+                noise_std
+                if noise_std is not None
+                else np.random.uniform(0.1, 1.5)
+            )
+
+            arma_sample = (
+                arma_process.generate_sample(
+                    nsample=length,
+                    scale=noise_std
+                )
+            )
+
+        # -----------------------------------------------------
+        # ARIMA + external innovation process
+        # e.g. ARIMA + GARCH
+        # -----------------------------------------------------
+        else:
+
+            innovations = np.asarray(
+                innovations,
+                dtype=float
+            )
+
+            if len(innovations) != length:
+                raise ValueError(
+                    f"innovations length must match series length. "
+                    f"Expected {length}, got {len(innovations)}."
+                )
+
+            arma_sample = (
+                arma_process.generate_sample(
+                    nsample=length,
+                    scale=1.0,
+                    distrvs=lambda size: innovations
+                )
+            )
+
+        # -----------------------------------------------------
+        # Integrate d times
+        # -----------------------------------------------------
+        series = arma_sample.copy()
+
         for _ in range(d):
             series = np.cumsum(series)
+
+        # -----------------------------------------------------
+        # Optional deterministic drift
+        # -----------------------------------------------------
         if const:
+
             if drift is None:
-                drift = np.random.uniform(0.01, 0.08)
-            series += drift * np.arange(length)
-        series = series + np.random.normal(0,noise_std,length)
+                drift = np.random.uniform(
+                    0.01,
+                    0.08
+                )
+
+            series = (
+                series
+                + drift * np.arange(length)
+            )
+
+        info = {
+            'type': 'trend',
+            'subtype': 'stochastic_ARIMA',
+            'unit_root': unit_root_label,
+            'ar_order': p,
+            'ar_coefs': ar_coefs,
+            'ma_order': q,
+            'ma_coefs': ma_coefs,
+            'diff': d,
+            'drift': drift if const else None
+        }
+
         return series, info
 
     def generate_ari_params(self, order_range=(1, 3), coef_range = (-0.9,0.9)):
@@ -190,26 +401,108 @@ class TimeSeriesGenerator:
                 break
         return order, coefs
 
-    def generate_ari_series(self, length, d = 1, const=False, drift=None, noise_std = None):
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
+    def generate_ari_series(
+        self,
+        length,
+        d=1,
+        const=False,
+        drift=None,
+        noise_std=None,
+        innovations=None
+    ):
+        if d not in {1, 2}:
+            raise ValueError(
+                "ARI differencing order d must be 1 or 2."
+            )
+
         order, coefs = self.generate_ari_params()
-        if d == 1: 
-            unit_root_label = "1_unit_root"
-        elif d == 2:
-            unit_root_label = "2_unit_root"
-        info = {'type': 'trend', 'subtype' : 'stochastic_ARI', 'unit_root': unit_root_label,
-                 'ar_order': order, 'ar_coefs': coefs, 'diff': d}
+
         ar = np.r_[1, -coefs]
         ma = np.array([1])
-        arma_process = ArmaProcess(ar, ma)
-        series = arma_process.generate_sample(nsample=length)
+
+        unit_root_label = ("1_unit_root" if d == 1 else "2_unit_root")
+
+        ar_process = ArmaProcess(
+            ar,
+            ma
+        )
+
+        # -----------------------------------------------------
+        # Standalone ARI
+        # -----------------------------------------------------
+        if innovations is None:
+
+            noise_std = (
+                noise_std
+                if noise_std is not None
+                else np.random.uniform(0.1, 1.5)
+            )
+
+            stationary_sample = (
+                ar_process.generate_sample(
+                    nsample=length,
+                    scale=noise_std
+                )
+            )
+
+        # -----------------------------------------------------
+        # ARI + external innovations
+        # -----------------------------------------------------
+        else:
+
+            innovations = np.asarray(
+                innovations,
+                dtype=float
+            )
+
+            if len(innovations) != length:
+                raise ValueError(
+                    f"innovations length must match series length. "
+                    f"Expected {length}, got {len(innovations)}."
+                )
+
+            stationary_sample = (
+                ar_process.generate_sample(
+                    nsample=length,
+                    scale=1.0,
+                    distrvs=lambda size: innovations
+                )
+            )
+
+        # -----------------------------------------------------
+        # Integrate d times
+        # -----------------------------------------------------
+        series = stationary_sample.copy()
+
         for _ in range(d):
             series = np.cumsum(series)
+
+        # -----------------------------------------------------
+        # Optional deterministic drift
+        # -----------------------------------------------------
         if const:
+
             if drift is None:
-                drift = np.random.uniform(0.01, 0.08)
-            series += drift * np.arange(length)
-        series = series + np.random.normal(0,noise_std,length)
+                drift = np.random.uniform(
+                    0.01,
+                    0.08
+                )
+
+            series = (
+                series
+                + drift * np.arange(length)
+            )
+
+        info = {
+            'type': 'trend',
+            'subtype': 'stochastic_ARI',
+            'unit_root': unit_root_label,
+            'ar_order': order,
+            'ar_coefs': coefs,
+            'diff': d,
+            'drift': drift if const else None
+        }
+
         return series, info
 
     def generate_ima_params(self, order_range=(1, 3), coef_range = (-0.9,0.9)):
@@ -223,27 +516,110 @@ class TimeSeriesGenerator:
                 break
         return order, coefs
 
-    def generate_ima_series(self, length, d = 1, const=False, drift=None, noise_scale=0.5, noise_std = None):
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
+    def generate_ima_series(
+        self,
+        length,
+        d=1,
+        const=False,
+        drift=None,
+        noise_std=None,
+        innovations=None
+    ):
+        if d not in {1, 2}:
+            raise ValueError(
+                "IMA differencing order d must be 1 or 2."
+            )
+
         order, coefs = self.generate_ima_params()
-        if d == 1: 
-            unit_root_label = "1_unit_root"
-        elif d == 2:
-            unit_root_label = "2_unit_root"
-        info = {'type': 'trend', 'subtype' : 'stochastic_IMA', 'unit_root': unit_root_label, 
-                'ma_order': order, 'ma_coefs': coefs, 'diff': d}
+
         ar = np.array([1])
         ma = np.r_[1, coefs]
-        arma_process = ArmaProcess(ar, ma)
-        series = arma_process.generate_sample(nsample=length)
+
+        unit_root_label = ("1_unit_root" if d == 1 else "2_unit_root")
+
+        ma_process = ArmaProcess(
+            ar,
+            ma
+        )
+
+        # -----------------------------------------------------
+        # Standalone IMA
+        # -----------------------------------------------------
+        if innovations is None:
+
+            noise_std = (
+                noise_std
+                if noise_std is not None
+                else np.random.uniform(0.1, 1.5)
+            )
+
+            stationary_sample = (
+                ma_process.generate_sample(
+                    nsample=length,
+                    scale=noise_std
+                )
+            )
+
+        # -----------------------------------------------------
+        # IMA + external innovations
+        # -----------------------------------------------------
+        else:
+
+            innovations = np.asarray(
+                innovations,
+                dtype=float
+            )
+
+            if len(innovations) != length:
+                raise ValueError(
+                    f"innovations length must match series length. "
+                    f"Expected {length}, got {len(innovations)}."
+                )
+
+            stationary_sample = (
+                ma_process.generate_sample(
+                    nsample=length,
+                    scale=1.0,
+                    distrvs=lambda size: innovations
+                )
+            )
+
+        # -----------------------------------------------------
+        # Integrate d times
+        # -----------------------------------------------------
+        series = stationary_sample.copy()
+
         for _ in range(d):
             series = np.cumsum(series)
+
+        # -----------------------------------------------------
+        # Optional deterministic drift
+        # -----------------------------------------------------
         if const:
+
             if drift is None:
-                drift = np.random.uniform(0.01, 0.8)
-            series += drift * np.arange(length)
-        series = series + np.random.normal(0,noise_std,length)
+                drift = np.random.uniform(
+                    0.01,
+                    0.08
+                )
+
+            series = (
+                series
+                + drift * np.arange(length)
+            )
+
+        info = {
+            'type': 'trend',
+            'subtype': 'stochastic_IMA',
+            'unit_root': unit_root_label,
+            'ma_order': order,
+            'ma_coefs': coefs,
+            'diff': d,
+            'drift': drift if const else None
+        }
+
         return series, info
+
 
     def generate_arfima_params(
         self,
@@ -290,64 +666,159 @@ class TimeSeriesGenerator:
         d_range=(0.25, 0.49),
         noise_std=None,
         alpha=0,
-        numseas=100
+        numseas=100,
+        innovations=None,
     ):
-        """Generate ARFIMA(p, d, q) series with long memory.
-        
-        Parameters
-        ----------
-        length : int
-            Series length
-        d_range : tuple
-            Range for fractional differencing parameter
-        noise_std : float, optional
-            Innovation standard deviation
-        alpha : float
-            Additive series constant, i.e. the process mean for a stationary
-            series (default: 0)
-        numseas : int
-            Number of seasoning (burn-in) samples generated and discarded
-            before the series is recorded (default: 100)
-
-        Returns
-        -------
-        series : np.ndarray
-            Generated ARFIMA series
-        info : dict
-            Metadata including d, stationarity, long_memory flags
         """
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
-        
-        p, d, q, ar_coefs, ma_coefs = self.generate_arfima_params(d_range=d_range)
+        Generate ARFIMA(p, d, q).
+
+        Standalone ARFIMA
+        -----------------
+        Uses the existing Davies-Harte based ARFIMA_sim.
+
+        ARFIMA + external innovation process
+        ------------------------------------
+        If innovations are supplied:
+
+            Phi(B)(1-B)^d X_t = Theta(B) epsilon_t
+
+        where epsilon_t may come from ARCH/GARCH/EGARCH/APARCH.
+
+        The external innovation path uses the fractional integration filter
+
+            (1-B)^(-d)
+
+        followed by the MA and AR filters.
+        """
+
+        p, d, q, ar_coefs, ma_coefs = self.generate_arfima_params(
+            d_range=d_range
+        )
+
+        external_innovations_used = innovations is not None
+
+        # =====================================================
+        # STANDALONE ARFIMA
+        # Existing exact Gaussian Davies-Harte implementation
+        # =====================================================
+
+        if innovations is None:
+            noise_std = (
+                noise_std
+                if noise_std is not None
+                else np.random.uniform(0.1, 1.5)
+            )
+
+            series = ARFIMA_sim(
+                p_coeffs=ar_coefs,
+                q_coeffs=ma_coefs,
+                d=d,
+                slen=length,
+                alpha=alpha,
+                sigma=noise_std,
+                numseas=numseas,
+            )
+
+        # =====================================================
+        # ARFIMA + EXTERNAL INNOVATIONS
+        # =====================================================
+
+        else:
+            innovations = np.asarray(
+                innovations,
+                dtype=float
+            )
+
+            expected_length = length + numseas
+
+            if len(innovations) != expected_length:
+                raise ValueError(
+                    "ARFIMA external innovations must include the "
+                    f"burn-in period. Expected {expected_length} values "
+                    f"(length={length} + numseas={numseas}), "
+                    f"got {len(innovations)}."
+                )
+
+            total = len(innovations)
+
+            # -------------------------------------------------
+            # Fractional integration weights
+            #
+            # (1-B)^(-d)
+            #
+            # psi_0 = 1
+            # psi_k = psi_(k-1) * (k - 1 + d) / k
+            # -------------------------------------------------
+
+            weights = np.empty(
+                total,
+                dtype=float
+            )
+
+            weights[0] = 1.0
+
+            for k in range(1, total):
+                weights[k] = (
+                    weights[k - 1]
+                    * (k - 1 + d)
+                    / k
+                )
+
+            fractional_noise = fftconvolve(
+                innovations,
+                weights,
+                mode="full"
+            )[:total]
+
+            # -------------------------------------------------
+            # ARMA filtering
+            #
+            # Phi(B) X_t = Theta(B) W_t
+            # -------------------------------------------------
+
+            ar_poly = np.r_[
+                1.0,
+                -np.asarray(ar_coefs, dtype=float)
+            ]
+
+            ma_poly = np.r_[
+                1.0,
+                np.asarray(ma_coefs, dtype=float)
+            ]
+
+            filtered = lfilter(
+                ma_poly,
+                ar_poly,
+                fractional_noise
+            )
+
+            # Remove start-up / fractional-filter transient.
+            series = filtered[numseas:numseas + length]
+
+            series = alpha + series
+
+            # sigma is not independently generated in this path.
+            noise_std = None
 
         info = {
-            'type': 'base_series',
-            'subtype': 'ARFIMA',
-            'p': p,                # ARFIMA p order
-            'd': d,                # Fractional differencing parameter
-            'q': q,                # ARFIMA q order
-            'ar_order': p,         # Alias for consistency
-            'ar_coefs': ar_coefs,
-            'ma_order': q,         # Alias for consistency
-            'ma_coefs': ma_coefs,
-            'diff': d,             # Alias for consistency with other processes
-            'stationary': d < 0.5,
-            'fractionally_integrated': True,
-            'long_memory': 0 < d < 0.5,
-            'alpha': alpha,
-            'sigma': noise_std,
-            'numseas': numseas
+            "type": "base_series",
+            "subtype": "ARFIMA",
+            "p": p,
+            "d": d,
+            "q": q,
+            "ar_order": p,
+            "ar_coefs": ar_coefs,
+            "ma_order": q,
+            "ma_coefs": ma_coefs,
+            "diff": d,
+            "stationary": d < 0.5,
+            "fractionally_integrated": True,
+            "long_memory": 0 < d < 0.5,
+            "alpha": alpha,
+            "sigma": noise_std,
+            "numseas": numseas,
+            "external_innovations_used": external_innovations_used,
         }
-
-        series = ARFIMA_sim(
-            p_coeffs=ar_coefs,
-            q_coeffs=ma_coefs,
-            d=d,
-            slen=length,
-            alpha=alpha,
-            sigma=noise_std,
-            numseas=numseas
-        )
 
         return series, info
 
@@ -357,7 +828,8 @@ class TimeSeriesGenerator:
         d_range=(0.25, 0.49),
         noise_std=None,
         alpha=0,
-        numseas=100
+        numseas=100,
+        innovations= None
     ):
         """Generate fractionally integrated process (ARFIMA).
         
@@ -390,7 +862,8 @@ class TimeSeriesGenerator:
                 d_range=d_range,
                 noise_std=noise_std,
                 alpha=alpha,
-                numseas=numseas
+                numseas=numseas,
+                innovations=innovations
             )
         else:
             raise ValueError(
@@ -441,66 +914,217 @@ class TimeSeriesGenerator:
     
         return series, info
 
-    def generate_egarch_series(self, length, omega_range=(0.1, 0.3), alpha_range=(0.5, 0.9), beta_range=(0.6, 0.9), theta_range=(-0.5, 0.5), lambda_range=(0.1, 0.5), cumulative=False, scale_factor=1):
+    def generate_egarch_series(
+        self,
+        length,
+        omega_range=(0.1, 0.3),
+        alpha_range=(0.2, 0.4),
+        gamma_range=(-0.3, 0.3),
+        beta_range=(0.75, 0.9),
+        cumulative=False,
+        scale_factor=1
+    ):
         omega = np.random.uniform(*omega_range)
         alpha = np.random.uniform(*alpha_range)
+        gamma = np.random.uniform(*gamma_range)
         beta = np.random.uniform(*beta_range)
-        theta = np.random.uniform(*theta_range)
-        lam = np.random.uniform(*lambda_range)
 
-        am = arch_model(None, vol='EGARCH', p=1, q=1, mean='Zero', dist='normal')
-        sim = am.simulate([omega, alpha, beta, theta, lam], nobs=length)
+        am = arch_model(
+            None,
+            vol='EGARCH',
+            p=1,
+            o=1,
+            q=1,
+            mean='Zero',
+            dist='normal'
+        )
+
+        sim = am.simulate(
+            [omega, alpha, gamma, beta],
+            nobs=length
+        )
 
         series = sim['data'].values * scale_factor
-        info = {'type': 'volatility', 'subtype': 'EGARCH', 'alpha': alpha, 'beta': beta, 'theta': theta, 'lambda': lam, 'omega': omega}
+
+        info = {
+            'type': 'volatility',
+            'subtype': 'EGARCH',
+            'omega': omega,
+            'alpha': alpha,
+            'gamma': gamma,
+            'beta': beta
+        }
+
         if cumulative:
             series = np.cumsum(series)
 
         return series, info
 
-    def generate_aparch_series(self, length, omega_range=(0.1, 0.3), alpha_range=(0.1, 0.3), beta_range=(0.5, 0.8), gamma_range=(-0.3, 0.3), delta_range=(1.0, 2.0), cumulative=False, scale_factor=1):
-        # Stationarity constraint: alpha + beta < 1
+
+    def generate_aparch_series(
+        self,
+        length,
+        omega_range=(0.1, 0.3),
+        alpha_range=(0.2, 0.35),
+        beta_range=(0.5, 0.75),
+        gamma_range=(-0.3, 0.3),
+        delta_range=(1.0, 2.0),
+        cumulative=False,
+        scale_factor=1
+    ):
+        # Practical stability guard for generated parameters.
         while True:
             alpha = np.random.uniform(*alpha_range)
             beta = np.random.uniform(*beta_range)
+
             if alpha + beta < 1:
                 break
-        
+
         omega = np.random.uniform(*omega_range)
         gamma = np.random.uniform(*gamma_range)
         delta = np.random.uniform(*delta_range)
 
-        from arch import arch_model
-        am = arch_model(None, vol='APARCH', p=1, o=1, q=1, mean='Zero', dist='normal')
+        am = arch_model(
+            None,
+            vol='APARCH',
+            p=1,
+            o=1,
+            q=1,
+            mean='Zero',
+            dist='normal'
+        )
 
-        sim = am.simulate([omega, alpha, gamma, beta, delta], nobs=length)
+        sim = am.simulate(
+            [omega, alpha, gamma, beta, delta],
+            nobs=length
+        )
 
         series = sim['data'].values * scale_factor
-        info = {'type': 'volatility', 'subtype': 'APARCH', 'alpha': alpha, 'beta': beta, 'gamma': gamma, 'delta': delta, 'omega': omega}
+
+        info = {
+            'type': 'volatility',
+            'subtype': 'APARCH',
+            'omega': omega,
+            'alpha': alpha,
+            'gamma': gamma,
+            'beta': beta,
+            'delta': delta
+        }
+
         if cumulative:
             series = np.cumsum(series)
 
         return series, info
 
-    def generate_stationary_base_series(self, distribution=None):
+    def generate_volatility(
+        self,
+        kind=None,
+        as_innovations=False):
+        """
+        Generate a volatility process.
+
+        Parameters
+        ----------
+        kind : str, optional
+            One of: arch, garch, egarch, aparch.
+            If None, one is selected randomly.
+
+        as_innovations : bool
+            If True, return the generated volatility series directly
+            so that it can be used as the innovation process of another
+            base model.
+
+            If False, return a standalone volatility DataFrame.
+        """
+
+        if kind is None:
+            kind = np.random.choice(self.volatile_base_distributions)
+
+        kind = str(kind).lower()
+
+        if kind == "arch":
+            series, info = self.generate_arch_series(self.length)
+
+        elif kind == "garch":
+            series, info = self.generate_garch_series(self.length)
+
+        elif kind == "egarch":
+            series, info = self.generate_egarch_series(self.length)
+
+        elif kind == "aparch":
+            series, info = self.generate_aparch_series(self.length)
+
+        else:
+            raise ValueError(
+                f"Invalid volatility process '{kind}'. "
+                f"Choose from {self.volatile_base_distributions}."
+            )
+
+        # Used as external innovations for another base model.
+        if as_innovations:
+            return np.asarray(series, dtype=float), info
+
+        # Standalone volatility base series.
+        df = pd.DataFrame({
+            "time": np.arange(self.length),
+            "data": np.asarray(series, dtype=float),
+            "stationary": np.ones(self.length,dtype=int),
+            "seasonal": np.zeros(self.length,dtype=int)})
+
+        return df, info
+
+    def generate_stationary_base_series(
+        self,
+        distribution=None,
+        innovations=None
+    ):
         if distribution is None:
-            distribution = np.random.choice(self.stationary_base_distributions)
+            distribution = np.random.choice(
+                self.stationary_base_distributions
+            )
+
         if distribution == 'white_noise':
-            series, info = self.generate_white_noise(self.length)
+            if innovations is not None:
+                raise ValueError(
+                    "white_noise cannot be combined with an external "
+                    "innovation process."
+                )
+
+            series, info = self.generate_white_noise(
+                self.length
+            )
+
         elif distribution == 'ar':
-            series, info = self.generate_ar_series(self.length)
+            series, info = self.generate_ar_series(
+                self.length,
+                innovations=innovations
+            )
+
         elif distribution == 'ma':
-            series, info = self.generate_ma_series(self.length)
+            series, info = self.generate_ma_series(
+                self.length,
+                innovations=innovations
+            )
+
         elif distribution == 'arma':
-            series, info = self.generate_arma_series(self.length)
+            series, info = self.generate_arma_series(
+                self.length,
+                innovations=innovations
+            )
+
+        else:
+            raise ValueError(
+                "Invalid stationary distribution. "
+                "Choose from 'ar', 'ma', 'arma', or 'white_noise'."
+            )
 
         df = pd.DataFrame({
             'time': np.arange(self.length),
             'data': series,
-            'stationary': (np.ones(self.length)).astype(int),
-            'seasonal': np.zeros(self.length).astype(int),
-
+            'stationary': np.ones(self.length, dtype=int),
+            'seasonal': np.zeros(self.length, dtype=int),
         })
+
         return df, info
 
     #ANOMALIES    
@@ -978,19 +1602,23 @@ class TimeSeriesGenerator:
         n
     ):
         """
-        Reconstruct one existing Fourier seasonal context.
+        Reconstruct one deterministic Fourier seasonal context
+        from an existing seasonal base series.
 
-        Supports:
+        Supported:
             - single_seasonality
             - multiple_seasonality
-            - SARMA
-            - SARIMA
+            - DETERMINISTIC_SARMA
+            - DETERMINISTIC_SARIMA
+            - SEASONAL_UNIT_ROOT_FOURIER
 
-        For SARIMA, the Fourier term belongs to the
-        seasonally differenced domain, so it is
-        seasonally integrated to obtain its contribution
-        in the observed-series domain.
+        Pure SARMA / SARIMA are intentionally unsupported because
+        they do not contain a deterministic Fourier component.
         """
+
+        # =====================================================
+        # PERIOD
+        # =====================================================
 
         periods = seasonal_info.get("periods")
 
@@ -1000,19 +1628,18 @@ class TimeSeriesGenerator:
                 "one seasonal period."
             )
 
-        # --------------------------------------------------
-        # Choose one existing seasonal component
-        # --------------------------------------------------
-        period = random.choice(periods)
+        period = int(
+            random.choice(periods)
+        )
 
-        subtype = seasonal_info.get(
-            "subtype",
-            ""
+        subtype = str(
+            seasonal_info.get("subtype", "")
         ).lower()
 
-        # --------------------------------------------------
-        # Retrieve coefficients
-        # --------------------------------------------------
+        # =====================================================
+        # FOURIER COEFFICIENTS
+        # =====================================================
+
         if subtype == "multiple_seasonality":
 
             all_coefficients = seasonal_info.get(
@@ -1029,7 +1656,7 @@ class TimeSeriesGenerator:
                 (
                     item
                     for item in all_coefficients
-                    if item["period"] == period
+                    if int(item["period"]) == period
                 ),
                 None
             )
@@ -1044,22 +1671,38 @@ class TimeSeriesGenerator:
                 "coefficients"
             ]
 
-        elif subtype == "sarma":
+            # In single/multiple generation, coefficients are
+            # stored before the final scale_factor is applied.
+            coefficient_scale = seasonal_info.get(
+                "scale_factor",
+                1.0
+            )
+
+        elif subtype == "single_seasonality":
 
             coefficients = seasonal_info.get(
-                "fourier_coefficients"
+                "coefficients"
             )
 
             if coefficients is None:
                 raise ValueError(
                     "No Fourier coefficients found "
-                    "for SARMA."
+                    "for single seasonality."
                 )
 
-        else:
-            # single seasonality + SARIMA
+            coefficient_scale = seasonal_info.get(
+                "scale_factor",
+                1.0
+            )
+
+        elif subtype in {
+            "deterministic_sarma",
+            "deterministic_sarima",
+            "seasonal_unit_root_fourier",
+        }:
+
             coefficients = seasonal_info.get(
-                "coefficients"
+                "fourier_coefficients"
             )
 
             if coefficients is None:
@@ -1068,9 +1711,32 @@ class TimeSeriesGenerator:
                     f"for subtype={subtype}."
                 )
 
-        # --------------------------------------------------
-        # Reconstruct Fourier term F_t
-        # --------------------------------------------------
+            # These generators already store the FINAL scaled
+            # and strength-calibrated Fourier coefficients.
+            coefficient_scale = 1.0
+
+        elif subtype in {
+            "pure_sarma",
+            "pure_sarima",
+        }:
+
+            raise ValueError(
+                f"Contextual anomaly generation requires an "
+                f"explicit deterministic seasonal component. "
+                f"{subtype} contains stochastic seasonality only."
+            )
+
+        else:
+
+            raise ValueError(
+                f"Unsupported seasonal subtype for contextual "
+                f"anomaly generation: {subtype}"
+            )
+
+        # =====================================================
+        # RECONSTRUCT FOURIER F_t
+        # =====================================================
+
         t = np.arange(n)
 
         fourier_term = np.zeros(
@@ -1080,9 +1746,17 @@ class TimeSeriesGenerator:
 
         for coefficient in coefficients:
 
-            k = coefficient["harmonic"]
-            sin_coef = coefficient["sin_coef"]
-            cos_coef = coefficient["cos_coef"]
+            k = int(
+                coefficient["harmonic"]
+            )
+
+            sin_coef = float(
+                coefficient["sin_coef"]
+            )
+
+            cos_coef = float(
+                coefficient["cos_coef"]
+            )
 
             fourier_term += (
                 sin_coef
@@ -1096,48 +1770,50 @@ class TimeSeriesGenerator:
                 )
             )
 
-        scale_factor = seasonal_info.get(
-            "scale_factor",
-            1.0
-        )
+        fourier_term *= coefficient_scale
 
-        fourier_term *= scale_factor
+        # =====================================================
+        # OBSERVED-DOMAIN SEASONAL CONTEXT
+        # =====================================================
 
-        # --------------------------------------------------
-        # SARIMA special case
-        #
-        # (1 - B^s) Y_t = F_t + epsilon_t
-        #
-        # F_t must therefore be seasonally integrated
-        # before it represents seasonal context in
-        # the observed Y_t domain.
-        # --------------------------------------------------
-        if subtype == "sarima":
+        if subtype == "seasonal_unit_root_fourier":
+
+            # Special model:
+            #
+            #   (1-B^s)Y_t = F_t + u_t
+            #
+            # Fourier therefore lives in the seasonal-
+            # difference equation. To obtain its contribution
+            # in the observed Y_t domain, integrate it
+            # seasonally.
 
             seasonal_context = np.zeros(
                 n,
                 dtype=float
             )
 
-            for i in range(n):
-
-                if i < period:
-                    seasonal_context[i] = (
-                        fourier_term[i]
-                    )
-
-                else:
-                    seasonal_context[i] = (
-                        seasonal_context[
-                            i - period
-                        ]
-                        + fourier_term[i]
-                    )
+            for i in range(
+                period,
+                n
+            ):
+                seasonal_context[i] = (
+                    seasonal_context[i - period]
+                    + fourier_term[i]
+                )
 
         else:
-            # Single, multiple, SARMA:
-            # Fourier component is already in level domain.
-            seasonal_context = fourier_term
+
+            # single / multiple /
+            # deterministic SARMA /
+            # deterministic SARIMA
+            #
+            # Fourier already exists directly in level domain:
+            #
+            #   Y_t = F_t + background_t
+
+            seasonal_context = (
+                fourier_term
+            )
 
         return period, seasonal_context
     
@@ -1439,7 +2115,9 @@ class TimeSeriesGenerator:
         series = df['data'].copy()
         sign = sign if sign is not None else np.random.choice([-1,1])
         noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 1.5)
-        slope = slope if slope is not None else sign * random.uniform(0.05, 0.5) / (len(series) / 100)
+        if slope is None:
+            slope = random.uniform(0.05,0.5) / (len(series) / 100)
+        slope = sign * abs(slope)        
         trend = intercept + slope * np.arange(len(series)) + np.random.normal(0, noise_std, len(series))
         series += trend * scale_factor
         info = {'type' : 'trend', 'subtype': 'deterministic_linear', 'sign': sign, 'slope': slope, 'intercept': intercept}
@@ -1458,7 +2136,10 @@ class TimeSeriesGenerator:
         t = np.linspace(-1, 1, length)
     
         # Choose strength of curvature
-        a = a if a is not None else sign * random.uniform(2.0, 5.0)
+        if a is None:
+            a = random.uniform(2.0, 5.0)
+
+        a = sign * abs(a)
     
         # Compute linear term to move vertex
         if location == "center":
@@ -1509,7 +2190,11 @@ class TimeSeriesGenerator:
             b += sign * random.uniform(0.5, 2.0)
     
         # Final trend
-        trend = (a * t**3 + b * t**2 + c * t) * amplitude
+        trend = sign * (
+            a * t**3
+            + b * t**2
+            + c * t
+        ) * abs(amplitude)
     
         noise_std = noise_std if noise_std is not None else np.random.uniform(0.01, 0.05)
         noise = np.random.normal(0, noise_std, length)
@@ -1558,7 +2243,7 @@ class TimeSeriesGenerator:
         sign = sign if sign is not None else random.choice([-1, 1])
         a = a if a is not None else sign * np.random.normal(loc=1.0, scale=0.2)
         b = b if b is not None else np.random.normal(loc=0.1, scale=0.05)
-        damping_rate = damping_rate if damping_rate is not None else random.uniform(0.01, 0.005)
+        damping_rate = damping_rate if damping_rate is not None else random.uniform(0.005, 0.01)
         t = np.arange(len(series))
         noise = np.random.normal(0, noise_std, len(series))
         trend = (a * t + b) * np.exp(-damping_rate * t) * scale_factor + noise
@@ -1571,38 +2256,157 @@ class TimeSeriesGenerator:
 
     #TRENDS - STOCHASTIC TRENDS
 
-    def generate_stochastic_trend(self, kind='rw', d = 1, const=False, drift=None, noise_std=1.0):
-        t = np.arange(self.length)
-        noise = np.random.normal(0, noise_std, self.length)
-    
+    def generate_stochastic_trend(
+        self,
+        kind='rw',
+        d=1,
+        const=False,
+        drift=None,
+        noise_std=1.0,
+        innovations=None
+    ):
+        t = np.arange(
+            self.length
+        )
+
+        # -----------------------------------------------------
+        # Innovation sequence
+        # -----------------------------------------------------
+
+        if innovations is None:
+
+            noise = np.random.normal(
+                0,
+                noise_std,
+                self.length
+            )
+
+        else:
+
+            innovations = np.asarray(
+                innovations,
+                dtype=float
+            )
+
+            if len(innovations) != self.length:
+                raise ValueError(
+                    f"innovations length must match series length. "
+                    f"Expected {self.length}, "
+                    f"got {len(innovations)}."
+                )
+
+            noise = innovations
+
+        # -----------------------------------------------------
+        # Random Walk
+        # -----------------------------------------------------
+
         if kind == 'rw':
-            info = {'type': 'trend', 'subtytpe': 'random_walk'}
-            series = np.cumsum(noise)
+
+            info = {
+                'type': 'trend',
+                'subtype': 'random_walk',
+                'drift': None
+            }
+
+            series = np.cumsum(
+                noise
+            )
+
+        # -----------------------------------------------------
+        # Random Walk with Drift
+        # -----------------------------------------------------
 
         elif kind == 'rwd':
+
             if drift is None:
-                drift = np.random.uniform(0.01, 0.1)
-            info = {'type': 'trend', 'subtype': 'random_walk_with_drift', 'drift': drift}
-            series = drift * t + np.cumsum(noise)
-    
+
+                drift = np.random.uniform(
+                    0.01,
+                    0.1
+                )
+
+            info = {
+                'type': 'trend',
+                'subtype': 'random_walk_with_drift',
+                'drift': drift
+            }
+
+            series = (
+                drift * t
+                + np.cumsum(noise)
+            )
+
+        # -----------------------------------------------------
+        # ARI
+        # -----------------------------------------------------
+
         elif kind == 'ari':
-            series, info = self.generate_ari_series(length=self.length, d = d, const = const)
-    
+
+            series, info = (
+                self.generate_ari_series(
+                    length=self.length,
+                    d=d,
+                    const=const,
+                    drift=drift,
+                    innovations=innovations
+                )
+            )
+
+        # -----------------------------------------------------
+        # IMA
+        # -----------------------------------------------------
+
         elif kind == 'ima':
-            series, info = self.generate_ima_series(length=self.length, d = d, const = const)
-    
+
+            series, info = (
+                self.generate_ima_series(
+                    length=self.length,
+                    d=d,
+                    const=const,
+                    drift=drift,
+                    innovations=innovations
+                )
+            )
+
+        # -----------------------------------------------------
+        # ARIMA
+        # -----------------------------------------------------
+
         elif kind == 'arima':
-            series, info = self.generate_arima_series(length=self.length, d = d, const = const)
-    
+
+            series, info = (
+                self.generate_arima_series(
+                    length=self.length,
+                    d=d,
+                    const=const,
+                    drift=drift,
+                    innovations=innovations
+                )
+            )
+
         else:
-            raise ValueError("Invalid kind. Choose from 'rw', 'rwd', 'ari', 'ima', or 'arima'.")
+
+            raise ValueError(
+                "Invalid kind. Choose from "
+                "'rw', 'rwd', 'ari', 'ima', or 'arima'."
+            )
 
         df = pd.DataFrame({
-            'time': np.arange(self.length),
+            'time': np.arange(
+                self.length
+            ),
             'data': series,
-            'stationary': (np.zeros(self.length)).astype(int),
-            'seasonal': np.zeros(self.length).astype(int),
+            'stationary': np.zeros(
+                self.length,
+                dtype=int
+            ),
+            'seasonal': np.zeros(
+                self.length,
+                dtype=int
+            ),
         })
+
         return df, info
 
     # PERIOD HELPERS
@@ -1763,6 +2567,377 @@ class TimeSeriesGenerator:
 
         return [int(p) for p in periods]
 
+    def _build_fourier_component(
+        self,
+        periods,
+        amplitudes,
+        num_harmonics=1):
+        """
+        Build a deterministic Fourier seasonal component.
+
+        This function ONLY builds the Fourier signal.
+
+        It does NOT:
+        - generate a background process
+        - add Gaussian noise
+        - calibrate against a background
+        - create a DataFrame
+
+        Parameters
+        ----------
+        periods : int or list[int]
+            Seasonal periods.
+
+        amplitudes : float or list[float]
+            Base amplitude for each seasonal period.
+
+        num_harmonics : int
+            Number of Fourier harmonics per period.
+
+        Returns
+        -------
+        fourier : np.ndarray
+            Raw deterministic Fourier component.
+
+        coefficients_by_period : list[dict]
+            Fourier coefficients grouped by seasonal period.
+        """
+
+        periods = self.normalize_period_list(periods)
+
+        if periods is None or len(periods) == 0:
+            raise ValueError(
+                "At least one seasonal period is required."
+            )
+
+        # Allow scalar amplitude for a single period.
+        if np.isscalar(amplitudes):
+            amplitudes = [float(amplitudes)]
+        else:
+            amplitudes = list(amplitudes)
+
+        if len(amplitudes) != len(periods):
+            raise ValueError("Length of amplitudes must match length of periods.")
+
+        if num_harmonics < 1:
+            raise ValueError("num_harmonics must be at least 1.")
+
+        n = self.length
+        t = np.arange(n)
+
+        fourier = np.zeros(n,dtype=float)
+
+        coefficients_by_period = []
+
+        for period, amplitude in zip(periods,amplitudes):
+            period = int(period)
+            amplitude = float(amplitude)
+
+            if period <= 0:
+                raise ValueError("Seasonal periods must be positive.")
+
+            period_coefficients = []
+
+            for k in range(1,num_harmonics + 1):
+                A_k = (amplitude * np.random.uniform(0.5, 1.0) / k)
+                B_k = (amplitude * np.random.uniform(0.5, 1.0) / k)
+                fourier += (A_k * np.sin(2 * np.pi * k * t / period))
+                fourier += (B_k * np.cos(2 * np.pi * k * t / period))
+                period_coefficients.append({
+                    "harmonic": k,
+                    "sin_coef": A_k,
+                    "cos_coef": B_k})
+
+            coefficients_by_period.append({
+                "period": period,
+                "coefficients":period_coefficients})
+
+        return (fourier, coefficients_by_period)
+
+
+    def _calibrate_fourier_to_background(
+        self,
+        fourier,
+        background,
+        difference_order=0,
+        seasonal_strength_range=(0.8, 2.0)):
+
+        """
+        Scale a deterministic Fourier component relative to
+        the background process.
+
+        For stationary / volatility backgrounds:
+            difference_order = 0
+
+        For integrated stochastic backgrounds:
+            difference_order = integration order d
+        """
+
+        fourier = np.asarray(fourier,dtype=float).copy()
+
+        reference = np.asarray(background, dtype=float).copy()
+        fourier_reference = np.asarray(fourier, dtype=float).copy()
+
+        for _ in range(difference_order):
+            reference = np.diff(reference)
+            fourier_reference = np.diff(fourier_reference)
+
+        background_scale = np.std(reference)
+        fourier_scale = np.std(fourier_reference)
+
+        seasonal_strength = (np.random.uniform(seasonal_strength_range[0],seasonal_strength_range[1]))
+
+        if(background_scale <= 1e-8 or fourier_scale <= 1e-8):
+            return (fourier, 1.0, seasonal_strength)
+
+        calibration_factor = (seasonal_strength * background_scale / fourier_scale)
+
+        fourier *= calibration_factor
+
+        return (fourier,calibration_factor,seasonal_strength)
+
+    def compose_with_fourier_seasonality(
+        self,
+        background_df,
+        kind="single",
+        period=None,
+        periods=None,
+        amplitude=None,
+        amplitudes=None,
+        num_components=2,
+        num_harmonics=1,
+        scale_factor=1.0,
+        difference_order=0,
+        seasonal_strength_range=(0.8, 2.0),
+        allowed_periods=None,
+        min_cycles=6
+    ):
+        """
+        Add deterministic Fourier seasonality to an existing background.
+
+            Y_t = B_t + F_t
+
+        For multiple seasonality with an integrated background,
+        each seasonal period is balanced separately in the
+        differenced domain before global Fourier calibration.
+        """
+
+        if "data" not in background_df.columns:
+            raise ValueError("background_df must contain a 'data' column.")
+
+        if len(background_df) != self.length:
+            raise ValueError("background_df length must match generator length.")
+
+        kind = str(kind).lower()
+
+        if kind not in {"single", "multiple"}:
+            raise ValueError("kind must be 'single' or 'multiple'.")
+
+        # =====================================================
+        # PERIODS + AMPLITUDES
+        # =====================================================
+
+        if kind == "single":
+            selected_period, _ = self.choose_calendar_period(
+                period=period,
+                allowed_periods=allowed_periods,
+                min_cycles=min_cycles
+            )
+
+            selected_periods = [selected_period]
+            selected_amplitudes = [1.0 if amplitude is None else float(amplitude)]
+
+        else:
+            if allowed_periods is None:
+                allowed_periods = self.get_all_calendar_periods()
+
+            allowed_periods = sorted(set(int(p) for p in allowed_periods))
+
+            valid_periods = self.get_valid_calendar_periods(
+                allowed_periods=allowed_periods,
+                min_cycles=min_cycles
+            )
+
+            selected_periods = self.normalize_period_list(periods)
+
+            if selected_periods is None:
+                if len(valid_periods) < num_components:
+                    raise ValueError(
+                        f"Multiple seasonality requires {num_components} valid periods, "
+                        f"but only {valid_periods} are available."
+                    )
+
+                selected_periods = random.sample(valid_periods, num_components)
+
+            else:
+                if len(selected_periods) < 2:
+                    raise ValueError("Multiple seasonality requires at least two periods.")
+
+                for p in selected_periods:
+                    if p not in allowed_periods:
+                        raise ValueError(f"period={p} is not in allowed calendar periods.")
+
+                    if p not in valid_periods:
+                        raise ValueError(
+                            f"period={p} is too large for length={self.length}."
+                        )
+
+            if amplitudes is None:
+                selected_amplitudes = [1.0] * len(selected_periods)
+
+            elif np.isscalar(amplitudes):
+                selected_amplitudes = [float(amplitudes)] * len(selected_periods)
+
+            else:
+                selected_amplitudes = list(amplitudes)
+
+                if len(selected_amplitudes) != len(selected_periods):
+                    raise ValueError(
+                        "Length of amplitudes must match length of periods."
+                    )
+
+        # =====================================================
+        # BUILD FOURIER
+        # =====================================================
+
+        period_balance_factors = {}
+
+        # -----------------------------------------------------
+        # MULTIPLE + INTEGRATED BACKGROUND
+        #
+        # Build each period separately and compensate for the
+        # attenuation caused by differencing.
+        # -----------------------------------------------------
+
+        if kind == "multiple" and difference_order > 0:
+            fourier = np.zeros(self.length, dtype=float)
+            coefficients_by_period = []
+
+            for p, amp in zip(selected_periods, selected_amplitudes):
+                component, component_meta = self._build_fourier_component(
+                    periods=[p],
+                    amplitudes=[amp],
+                    num_harmonics=num_harmonics
+                )
+
+                diff_component = component.copy()
+
+                for _ in range(difference_order):
+                    diff_component = np.diff(diff_component)
+
+                level_std = np.std(component)
+                diff_std = np.std(diff_component)
+
+                if level_std > 1e-8 and diff_std > 1e-8:
+                    balance_factor = level_std / diff_std
+                else:
+                    balance_factor = 1.0
+
+                component *= balance_factor
+
+                # Bake the period-specific balance into its coefficients.
+                for coef in component_meta[0]["coefficients"]:
+                    coef["sin_coef"] *= balance_factor
+                    coef["cos_coef"] *= balance_factor
+
+                fourier += component
+                coefficients_by_period.append(component_meta[0])
+                period_balance_factors[int(p)] = float(balance_factor)
+
+        # -----------------------------------------------------
+        # SINGLE OR NON-INTEGRATED MULTIPLE
+        # -----------------------------------------------------
+
+        else:
+            fourier, coefficients_by_period = self._build_fourier_component(
+                periods=selected_periods,
+                amplitudes=selected_amplitudes,
+                num_harmonics=num_harmonics
+            )
+
+            period_balance_factors = {
+                int(p): 1.0
+                for p in selected_periods
+            }
+
+        # =====================================================
+        # USER SCALE
+        # =====================================================
+
+        fourier *= scale_factor
+
+        # =====================================================
+        # GLOBAL CALIBRATION AGAINST BACKGROUND
+        # =====================================================
+
+        fourier, calibration_factor, seasonal_strength = (
+            self._calibrate_fourier_to_background(
+                fourier=fourier,
+                background=background_df["data"].to_numpy(dtype=float),
+                difference_order=difference_order,
+                seasonal_strength_range=seasonal_strength_range
+            )
+        )
+
+        final_scale_factor = scale_factor * calibration_factor
+
+        # =====================================================
+        # COMBINE
+        # =====================================================
+
+        df = background_df.copy()
+        df.loc[:, "data"] = df["data"].to_numpy(dtype=float) + fourier
+        df.loc[:, "stationary"] = 0
+        df.loc[:, "seasonal"] = 1
+
+        if kind == "single":
+            df.loc[:, "single_seas"] = 1
+        else:
+            df.loc[:, "multiple_seas"] = 1
+
+        # =====================================================
+        # METADATA
+        # =====================================================
+
+        period_meanings = {
+            p: self.get_period_meanings(p)
+            for p in selected_periods
+        }
+
+        if kind == "single":
+            info = {
+                "type": "seasonal",
+                "subtype": "single_seasonality",
+                "periods": selected_periods,
+                "period_meanings": period_meanings,
+                "amplitudes": selected_amplitudes[0],
+                "num_harmonics": num_harmonics,
+                "coefficients": coefficients_by_period[0]["coefficients"],
+                "scale_factor": final_scale_factor,
+                "seasonal_strength": seasonal_strength,
+                "period_balance_factors": period_balance_factors,
+                "composition_mode": True,
+                "calibration_difference_order": int(difference_order),
+            }
+
+        else:
+            info = {
+                "type": "seasonal",
+                "subtype": "multiple_seasonality",
+                "periods": selected_periods,
+                "period_meanings": period_meanings,
+                "amplitudes": selected_amplitudes,
+                "num_harmonics": num_harmonics,
+                "coefficients": coefficients_by_period,
+                "scale_factor": final_scale_factor,
+                "seasonal_strength": seasonal_strength,
+                "period_balance_factors": period_balance_factors,
+                "composition_mode": True,
+                "calibration_difference_order": int(difference_order),
+            }
+
+        return df, info
+
 # SEASONALITY
 
     def generate_single_seasonality(
@@ -1773,68 +2948,74 @@ class TimeSeriesGenerator:
         scale_factor=1,
         num_harmonics=1,
         allowed_periods=None,
-        min_cycles=6
-    ):
+        min_cycles=6):
         n = self.length
-        t = np.arange(n)
 
-        series = np.random.normal(loc=0.0, scale=0.2, size=n)
+        # STANDALONE BACKGROUND
 
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.01, 0.05)
+        series = np.random.normal(loc=0.0,scale=0.2,size=n)
 
-        period, valid_periods = self.choose_calendar_period(
-            period=period,
-            allowed_periods=allowed_periods,
-            min_cycles=min_cycles
-        )
+        # SEASONAL NOISE
 
-        base_std = np.std(series)
-        amplitude = amplitude if amplitude is not None else base_std * np.random.uniform(0.5, 2.5)
+        if noise_std is None:
+            noise_std = np.random.uniform(0.01,0.05)
 
-        seasonality = np.zeros(n)
-        coefficients = []
+        # PERIOD
 
-        for k in range(1, num_harmonics + 1):
-            A_k = amplitude * np.random.uniform(0.5, 1.0) / k
-            B_k = amplitude * np.random.uniform(0.5, 1.0) / k
+        period, _ = (
+            self.choose_calendar_period(
+                period=period,
+                allowed_periods=allowed_periods,
+                min_cycles=min_cycles))
 
-            seasonality += A_k * np.sin(2 * np.pi * k * t / period)
-            seasonality += B_k * np.cos(2 * np.pi * k * t / period)
+        # AMPLITUDE
 
-            coefficients.append({
-                "harmonic": k,
-                "sin_coef": A_k,
-                "cos_coef": B_k
-            })
+        if amplitude is None:
+            base_std = np.std(series)
 
-        seasonality += np.random.normal(0, noise_std, size=n)
+            amplitude = (base_std * np.random.uniform(0.5,2.5))
 
-        series += seasonality * scale_factor
+        # FOURIER
+
+        (fourier,coefficients_by_period) = self._build_fourier_component(
+            periods=[period],
+            amplitudes=[amplitude],
+            num_harmonics=num_harmonics)
+
+        coefficients = (coefficients_by_period[0]["coefficients"])
+
+        # STANDALONE SEASONAL NOISE
+
+        seasonal_noise = (np.random.normal(0,noise_std,size=n))
+
+        seasonality = (fourier + seasonal_noise)
+
+        series += (seasonality * scale_factor)
+
+        # DATAFRAME
 
         df = pd.DataFrame({
-            "time": np.arange(n),
-            "data": series,
-            "stationary": np.zeros(n).astype(int),
-            "seasonal": np.ones(n).astype(int),
-            "single_seas": np.ones(n).astype(int)
-        })
+            "time":np.arange(n),
+            "data":series,
+            "stationary":np.zeros(n,dtype=int),
+            "seasonal":np.ones(n,dtype=int),
+            "single_seas":np.ones(n,dtype=int)})
+
+        # METADATA
 
         info = {
-            "type": "seasonal",
-            "subtype": "single_seasonality",
-            "periods": [period],
-            "period_meanings": {
-                period: self.get_period_meanings(period)
-            },
-            "amplitudes": amplitude,
-            "noise_std": noise_std,
-            "scale_factor": scale_factor,
-            "num_harmonics": num_harmonics,
-            "coefficients": coefficients
-        }
+            "type":"seasonal",
+            "subtype":"single_seasonality",
+            "periods":[period],
+            "period_meanings": {period:self.get_period_meanings(period)},
+            "amplitudes":amplitude,
+            "noise_std":noise_std,
+            "scale_factor":scale_factor,
+            "num_harmonics":num_harmonics,
+            "coefficients":coefficients}
 
         return df, info
-    
+
     def generate_multiple_seasonality(
         self,
         num_components=2,
@@ -1844,253 +3025,1148 @@ class TimeSeriesGenerator:
         scale_factor=3,
         num_harmonics=1,
         allowed_periods=None,
-        min_cycles=6
-    ):
+        min_cycles=6):
         n = self.length
-        t = np.arange(n)
 
-        series = np.random.normal(loc=0.0, scale=0.2, size=n)
+        # STANDALONE BACKGROUND
 
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.01, 0.05)
+        series = np.random.normal(loc=0.0,scale=0.2,size=n)
+
+        # SEASONAL NOISE
+
+        if noise_std is None:
+            noise_std = np.random.uniform(0.01,0.05)
+
+        # VALID PERIODS
+        # 
 
         if allowed_periods is None:
-            allowed_periods = self.get_all_calendar_periods()
+            allowed_periods = (self.get_all_calendar_periods())
 
         allowed_periods = sorted(set(int(p) for p in allowed_periods))
 
-        valid_periods = self.get_valid_calendar_periods(
-            allowed_periods=allowed_periods,
-            min_cycles=min_cycles
-        )
+        valid_periods = (
+            self.get_valid_calendar_periods(allowed_periods=allowed_periods, min_cycles=min_cycles))
 
-        if len(valid_periods) < 2 and periods is None:
-            raise ValueError(
-                f"Multiple seasonality needs at least 2 valid periods. "
-                f"For length={n}, valid periods are {valid_periods}."
-            )
+        periods = (self.normalize_period_list(periods))
 
-        periods = self.normalize_period_list(periods)
+        # PERIOD SELECTION
 
         if periods is None:
-            periods = random.sample(
-                valid_periods,
-                min(num_components, len(valid_periods))
-            )
+            if (len(valid_periods) < num_components):
+                raise ValueError(f"Multiple seasonality needs {num_components} valid periods, but only {valid_periods} are available.")
+
+            periods = random.sample(valid_periods,num_components)
+
         else:
+            if len(periods) < 2:
+                raise ValueError("Multiple seasonality requires at least 2 periods.")
+
             for p in periods:
                 if p not in allowed_periods:
-                    raise ValueError(
-                        f"period={p} is not in allowed calendar periods: {allowed_periods}"
-                    )
+                    raise ValueError(f"period={p} is not in allowed calendar periods.")
 
                 if p not in valid_periods:
-                    raise ValueError(
-                        f"period={p} is too large for length={n} with min_cycles={min_cycles}. "
-                        f"Valid periods are {valid_periods}."
-                    )
+                    raise ValueError(f"period={p} is too large for length={n}.")
 
-            if len(periods) < 2:
-                raise ValueError(
-                    "Multiple seasonality should have at least 2 periods. "
-                    "Pass something like periods=[7, 30] or periods=[12, 24]."
-                )
+        # AMPLITUDES
 
         if amplitudes is None:
             base_std = np.std(series)
-            amplitudes = [
-                base_std * np.random.uniform(0.5, 2.0)
-                for _ in periods
-            ]
+
+            amplitudes = [(base_std * np.random.uniform(0.5,2.0)) for _ in periods]
+
         else:
-            if len(amplitudes) != len(periods):
-                raise ValueError(
-                    f"Length of amplitudes must match length of periods. "
-                    f"Got {len(amplitudes)} amplitudes and {len(periods)} periods."
-                )
+            if np.isscalar(amplitudes):
+                amplitudes = [float(amplitudes) for _ in periods]
 
-        seasonality = np.zeros(n)
+            else:
+                amplitudes = list(amplitudes)
 
-        periods_meta = []
-        amplitudes_meta = []
-        coefficients_meta = []
+            if (len(amplitudes) != len(periods)):
+                raise ValueError("Length of amplitudes must match length of periods.")
 
-        for period, amplitude in zip(periods, amplitudes):
-            period_coefficients = []
+        # FOURIER
 
-            for k in range(1, num_harmonics + 1):
-                A_k = amplitude * np.random.uniform(0.5, 1.0) / k
-                B_k = amplitude * np.random.uniform(0.5, 1.0) / k
+        (fourier,coefficients_meta) = self._build_fourier_component(
+            periods=periods,
+            amplitudes=amplitudes,
+            num_harmonics=num_harmonics)
 
-                seasonality += A_k * np.sin(2 * np.pi * k * t / period)
-                seasonality += B_k * np.cos(2 * np.pi * k * t / period)
+        # STANDALONE SEASONAL NOISE
+        seasonal_noise = (np.random.normal(0,noise_std,size=n))
 
-                period_coefficients.append({
-                    "harmonic": k,
-                    "sin_coef": A_k,
-                    "cos_coef": B_k
-                })
+        seasonality = (fourier + seasonal_noise)
 
-            periods_meta.append(period)
-            amplitudes_meta.append(amplitude)
-            coefficients_meta.append({
-                "period": period,
-                "coefficients": period_coefficients
-            })
+        series += (seasonality * scale_factor)
 
-        seasonality += np.random.normal(0, noise_std, size=n)
-
-        series += seasonality * scale_factor
+        # DATAFRAME
 
         df = pd.DataFrame({
-            "time": np.arange(n),
-            "data": series,
-            "stationary": np.zeros(n).astype(int),
-            "seasonal": np.ones(n).astype(int),
-            "multiple_seas": np.ones(n).astype(int)
-        })
+            "time":np.arange(n),
+            "data":series,
+            "stationary":np.zeros(n,dtype=int),
+            "seasonal":np.ones(n,dtype=int),
+            "multiple_seas":np.ones(n,dtype=int)})
+
+        # METADATA
 
         info = {
             "type": "seasonal",
             "subtype": "multiple_seasonality",
-            "periods": periods_meta,
-            "period_meanings": {
-                p: self.get_period_meanings(p)
-                for p in periods_meta
-            },
-            "amplitudes": amplitudes_meta,
+            "periods": periods,
+            "period_meanings": {p: self.get_period_meanings(p) for p in periods},
+            "amplitudes": amplitudes,
             "noise_std": noise_std,
             "scale_factor": scale_factor,
             "num_harmonics": num_harmonics,
-            "coefficients": coefficients_meta
-        }
+            "coefficients": coefficients_meta}
 
         return df, info
 
-    def generate_sarima_series(
+    def generate_pure_sarma(
         self,
         period=None,
-        amplitude=None,
         noise_std=None,
-        scale_factor=1,
-        initial_std=0.2,
-        num_harmonics=1,
-        allowed_periods=None,
-        min_cycles=6
-    ):
-        """
-        Seasonal unit root case with deterministic Fourier seasonal difference.
-
-        Model:
-            Y_t - Y_{t-s} = Fourier(t) + noise
-        """
-
-        n = self.length
-        t = np.arange(n)
-
-        period, _ = self.choose_calendar_period(
-            period=period,
-            allowed_periods=allowed_periods,
-            min_cycles=min_cycles
-        )
-
-        if n <= period:
-            raise ValueError("Series length must be larger than the seasonal period.")
-
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.1, 0.20)
-
-        if amplitude is None:
-            base_series = np.random.normal(loc=0.0, scale=0.2, size=n)
-            amplitude = np.std(base_series) * np.random.uniform(0.5, 2.5)
-
-        seasonal_difference = np.zeros(n)
-        coefficients = []
-
-        for k in range(1, num_harmonics + 1):
-            A_k = amplitude * np.random.uniform(0.5, 1.0) / k
-            B_k = amplitude * np.random.uniform(0.5, 1.0) / k
-
-            seasonal_difference += A_k * np.sin(2 * np.pi * k * t / period)
-            seasonal_difference += B_k * np.cos(2 * np.pi * k * t / period)
-
-            coefficients.append({
-                "harmonic": k,
-                "sin_coef": A_k,
-                "cos_coef": B_k
-            })
-
-        seasonal_difference += np.random.normal(0, noise_std, size=n)
-        seasonal_difference = seasonal_difference * scale_factor
-
-        series = np.zeros(n)
-        series[:period] = np.random.normal(0, initial_std, size=period)
-
-        for i in range(period, n):
-            series[i] = series[i - period] + seasonal_difference[i]
-
-        actual_seasonal_difference = np.full(n, np.nan)
-        actual_seasonal_difference[period:] = series[period:] - series[:-period]
-
-        df = pd.DataFrame({
-            "time": np.arange(n),
-            "data": series,
-            "seasonal_diff": actual_seasonal_difference,
-            "stationary": np.zeros(n).astype(int),
-            "seasonal": np.ones(n).astype(int),
-            "sarima": np.ones(n).astype(int)
-        })
-
-        info = {
-            "type": "seasonal",
-            "subtype": "SARIMA",
-            "periods": [period],
-            "period_meanings": {
-                period: self.get_period_meanings(period)
-            },
-            "diff": 0,
-            "seasonal_diff": 1,
-            "seasonal_unit_root": "seasonal_unit_root",
-            "amplitudes": amplitude,
-            "noise_std": noise_std,
-            "scale_factor": scale_factor,
-            "initial_std": initial_std,
-            "num_harmonics": num_harmonics,
-            "coefficients": coefficients
-        }
-
-        return df, info
-
-    def generate_sarma_series(
-        self,
-        period=None,
-        amplitude=None,
-        noise_std=None,
-        scale_factor=1,
-        error_scale=None,
-        num_harmonics=1,
         order_range=(1, 2),
-        seasonal_order_range=(1, 1),
-        coef_range=(-0.4, 0.4),
         seasonal_coef_range=(-0.4, 0.4),
+        min_seasonal_abs=0.20,
+        min_cancellation_gap=0.10,
         allowed_periods=None,
         min_cycles=6,
         max_attempts=1000
     ):
         """
-        Generates a SARMA-like seasonal series with deterministic seasonality.
+        Pure multiplicative stochastic SARMA process.
 
-        Model:
-            Y_t = f_t + u_t + e_t
+        Model
+        -----
+            phi(B) Phi(B^s) Y_t
+                =
+            theta(B) Theta(B^s) epsilon_t
 
-        where:
-            f_t = deterministic Fourier seasonality
-            u_t = stationary SARMA error process
-            e_t = small observation noise
-
-        There is no unit root and no differencing.
+        Properties
+        ----------
+        - d = 0
+        - D = 0
+        - no deterministic Fourier component
+        - no extra observation noise
+        - seasonality comes entirely from seasonal AR/MA dynamics
         """
 
         n = self.length
-        t = np.arange(n)
+
+        # SEASONAL PERIOD
+
+        period, _ = self.choose_calendar_period(
+            period=period,
+            allowed_periods=allowed_periods,
+            min_cycles=min_cycles)
+
+        s = period
+
+        if n <= s:
+            raise ValueError("Series length must be larger than the seasonal period.")
+
+        if noise_std is None:
+            noise_std = np.random.uniform(0.1, 0.20)
+
+        # HELPER: SEASONAL COEFFICIENT AWAY FROM ZERO
+        def draw_seasonal_coef():
+            for _ in range(1000):
+                coef = np.random.uniform(
+                    seasonal_coef_range[0],
+                    seasonal_coef_range[1])
+                if abs(coef) >= min_seasonal_abs:
+                    return coef
+
+            raise RuntimeError("Could not draw a valid seasonal coefficient.")
+
+        arma_process = None
+
+        # =====================================================
+        # PARAMETER SEARCH
+        # =====================================================
+
+        for _ in range(max_attempts):
+
+            # -------------------------------------------------
+            # NON-SEASONAL ORDERS
+            # -------------------------------------------------
+
+            ar_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            ma_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            # -------------------------------------------------
+            # SEASONAL ORDERS
+            #
+            # P,Q ∈ {0,1}
+            # but not both zero
+            # -------------------------------------------------
+
+            while True:
+
+                seasonal_ar_order = np.random.randint(0, 2)
+                seasonal_ma_order = np.random.randint(0, 2)
+
+                if (
+                    seasonal_ar_order > 0
+                    or seasonal_ma_order > 0
+                ):
+                    break
+
+            # -------------------------------------------------
+            # NON-SEASONAL COEFFICIENTS
+            # -------------------------------------------------
+
+            ar_coefs = np.random.uniform(
+                -0.4,
+                0.4,
+                ar_order
+            )
+
+            ma_coefs = np.random.uniform(
+                -0.4,
+                0.4,
+                ma_order
+            )
+
+            # -------------------------------------------------
+            # SEASONAL COEFFICIENTS
+            # -------------------------------------------------
+
+            if seasonal_ar_order == 1:
+                seasonal_ar_coefs = np.array([
+                    draw_seasonal_coef()
+                ])
+            else:
+                seasonal_ar_coefs = np.array([], dtype=float)
+
+            if seasonal_ma_order == 1:
+                seasonal_ma_coefs = np.array([
+                    draw_seasonal_coef()
+                ])
+            else:
+                seasonal_ma_coefs = np.array([], dtype=float)
+
+            # -------------------------------------------------
+            # PREVENT NEAR CANCELLATION
+            #
+            # Theta ≈ -Phi
+            # -------------------------------------------------
+
+            if (
+                seasonal_ar_order == 1
+                and seasonal_ma_order == 1
+            ):
+
+                phi = seasonal_ar_coefs[0]
+                theta = seasonal_ma_coefs[0]
+
+                seasonal_cancellation_gap = abs(
+                    phi + theta
+                )
+
+                if (
+                    seasonal_cancellation_gap
+                    < min_cancellation_gap
+                ):
+                    continue
+
+            else:
+                seasonal_cancellation_gap = np.nan
+
+            # =================================================
+            # POLYNOMIALS
+            # =================================================
+
+            nonseasonal_ar = np.r_[
+                1.0,
+                -ar_coefs
+            ]
+
+            nonseasonal_ma = np.r_[
+                1.0,
+                ma_coefs
+            ]
+
+            seasonal_ar = np.zeros(
+                seasonal_ar_order * s + 1
+            )
+
+            seasonal_ar[0] = 1.0
+
+            if seasonal_ar_order == 1:
+                seasonal_ar[s] = (
+                    -seasonal_ar_coefs[0]
+                )
+
+            seasonal_ma = np.zeros(
+                seasonal_ma_order * s + 1
+            )
+
+            seasonal_ma[0] = 1.0
+
+            if seasonal_ma_order == 1:
+                seasonal_ma[s] = (
+                    seasonal_ma_coefs[0]
+                )
+
+            # =================================================
+            # MULTIPLICATIVE SARMA
+            # =================================================
+
+            ar_poly = np.convolve(
+                nonseasonal_ar,
+                seasonal_ar
+            )
+
+            ma_poly = np.convolve(
+                nonseasonal_ma,
+                seasonal_ma
+            )
+
+            candidate = ArmaProcess(
+                ar_poly,
+                ma_poly
+            )
+
+            if (
+                candidate.isstationary
+                and candidate.isinvertible
+            ):
+                arma_process = candidate
+                break
+
+        if arma_process is None:
+            raise RuntimeError(
+                "Could not generate a valid pure SARMA process."
+            )
+
+        # =====================================================
+        # GENERATE
+        # =====================================================
+
+        burnin = max(
+            200,
+            8 * s
+        )
+
+        series = arma_process.generate_sample(
+            nsample=n,
+            burnin=burnin,
+            scale=noise_std
+        )
+
+        # =====================================================
+        # DATAFRAME
+        # =====================================================
+
+        df = pd.DataFrame({
+            "time": np.arange(n),
+            "data": series,
+            "stochastic_component": series.copy(),
+            "stationary": np.ones(n).astype(int),
+            "seasonal": np.ones(n).astype(int),
+            "sarma": np.ones(n).astype(int)
+        })
+
+        # =====================================================
+        # METADATA
+        # =====================================================
+
+        info = {
+            "type": "seasonal",
+            "subtype": "PURE_SARMA",
+
+            "periods": [s],
+
+            "period_meanings": {
+                s: self.get_period_meanings(s)
+            },
+
+            "seasonality_source":
+                "stochastic_seasonal_ar_ma",
+
+            "diff": 0,
+            "seasonal_diff": 0,
+
+            "unit_root": "none",
+            "seasonal_unit_root": "none",
+
+            "noise_std": noise_std,
+
+            "ar_order": ar_order,
+            "ma_order": ma_order,
+
+            "ar_coefs": ar_coefs,
+            "ma_coefs": ma_coefs,
+
+            "seasonal_ar_order": seasonal_ar_order,
+            "seasonal_ma_order": seasonal_ma_order,
+
+            "seasonal_ar_coefs": seasonal_ar_coefs,
+            "seasonal_ma_coefs": seasonal_ma_coefs,
+
+            "min_seasonal_abs": min_seasonal_abs,
+
+            "seasonal_cancellation_gap":
+                seasonal_cancellation_gap,
+
+            "fourier_used": False
+        }
+
+        return df, info
+
+    def generate_pure_sarima(
+        self,
+        period=None,
+        noise_std=None,
+        initial_std=0.2,
+        d=0,
+        D=1,
+        order_range=(0, 2),
+        seasonal_order_range=(0, 1),
+        coef_range=(-0.4, 0.4),
+        seasonal_coef_range=(-0.4, 0.4),
+        allowed_periods=None,
+        min_cycles=6,
+        max_attempts=1000):
+        """
+        Pure multiplicative stochastic SARIMA process.
+
+        Model
+        -----
+            phi(B) Phi(B^s)
+            (1-B)^d (1-B^s)^D Y_t
+
+                =
+
+            theta(B) Theta(B^s) epsilon_t
+
+        No deterministic Fourier component is used.
+        """
+
+        n = self.length
+
+        # DIFFERENCING ORDERS
+
+        if d not in (0, 1):
+            raise ValueError("Currently d must be 0 or 1.")
+
+        if D not in (0, 1):
+            raise ValueError("Currently D must be 0 or 1.")
+
+        # PERIOD
+
+        period, _ = self.choose_calendar_period(
+            period=period,
+            allowed_periods=allowed_periods,
+            min_cycles=min_cycles)
+
+        s = period
+
+        if n <= s:
+            raise ValueError("Series length must be larger than seasonal period.")
+
+
+
+        if noise_std is None:
+            noise_std = np.random.uniform(0.1,0.20)
+
+        arma_process = None
+
+        # STATIONARY SARMA CORE
+
+        for _ in range(max_attempts):
+            ar_order = np.random.randint(order_range[0],order_range[1] + 1)
+
+            ma_order = np.random.randint(order_range[0],order_range[1] + 1)
+
+            seasonal_ar_order = np.random.randint(seasonal_order_range[0],seasonal_order_range[1] + 1)
+
+            seasonal_ma_order = np.random.randint(seasonal_order_range[0],seasonal_order_range[1] + 1)
+
+            # If D=0, ensure some stochastic seasonal mechanism exists.
+            if (D == 0 and seasonal_ar_order == 0 and seasonal_ma_order == 0):
+                continue
+
+            # COEFFICIENTS
+
+            if ar_order > 0:
+                ar_coefs = np.random.uniform(coef_range[0],coef_range[1],ar_order)
+            else:
+                ar_coefs = np.array([], dtype=float)
+
+            if ma_order > 0:
+                ma_coefs = np.random.uniform(coef_range[0],coef_range[1],ma_order)
+            else:
+                ma_coefs = np.array([], dtype=float)
+
+            if seasonal_ar_order > 0:
+                seasonal_ar_coefs = np.random.uniform(seasonal_coef_range[0],seasonal_coef_range[1],seasonal_ar_order)
+            else:
+                seasonal_ar_coefs = np.array([], dtype=float)
+
+            if seasonal_ma_order > 0:
+                seasonal_ma_coefs = np.random.uniform(seasonal_coef_range[0],seasonal_coef_range[1],seasonal_ma_order)
+            else:
+                seasonal_ma_coefs = np.array([], dtype=float)
+
+            # POLYNOMIALS
+
+            nonseasonal_ar = np.r_[1.0,-ar_coefs]
+
+            nonseasonal_ma = np.r_[1.0,ma_coefs]
+
+            seasonal_ar = np.zeros(seasonal_ar_order * s + 1)
+
+            seasonal_ar[0] = 1.0
+
+            for i, coef in enumerate(seasonal_ar_coefs,start=1):
+                seasonal_ar[i * s] = -coef
+
+            seasonal_ma = np.zeros(seasonal_ma_order * s + 1)
+
+            seasonal_ma[0] = 1.0
+
+            for i, coef in enumerate(seasonal_ma_coefs,start=1):
+                seasonal_ma[i * s] = coef
+
+            ar_poly = np.convolve(nonseasonal_ar,seasonal_ar)
+
+            ma_poly = np.convolve(nonseasonal_ma,seasonal_ma)
+
+            candidate = ArmaProcess(ar_poly,ma_poly)
+
+            if (candidate.isstationary and candidate.isinvertible):
+                arma_process = candidate
+                break
+
+        if arma_process is None:
+            raise RuntimeError("Could not generate valid SARMA core.")
+
+        # STATIONARY SARMA CORE
+
+        burnin = max(200,8 * s)
+
+        sarma_core = arma_process.generate_sample(
+            nsample=n,
+            burnin=burnin,
+            scale=noise_std)
+
+        stochastic_component = sarma_core.copy()
+
+        # SEASONAL INTEGRATION
+        # (1-B^s)^D
+
+        for _ in range(D):
+            integrated = np.zeros(n)
+            integrated[:s] = np.random.normal(0,initial_std,size=s)
+
+            for i in range(s, n):
+                integrated[i] = (integrated[i - s] + stochastic_component[i])
+
+            stochastic_component = integrated
+
+        # NON-SEASONAL INTEGRATION
+        # (1-B)^d
+
+
+        for _ in range(d):
+            integrated = np.zeros(n)
+            integrated[0] = np.random.normal(0,initial_std)
+
+            for i in range(1, n):
+                integrated[i] = (integrated[i - 1] + stochastic_component[i])
+
+            stochastic_component = integrated
+
+        series = stochastic_component
+
+        # DATAFRAME
+
+        df = pd.DataFrame({
+            "time": np.arange(n),
+            "data":series,
+            "stationary_core": sarma_core,
+            "stochastic_component": stochastic_component,
+            "stationary": np.zeros(n).astype(int),
+            "seasonal": np.ones(n).astype(int),
+            "sarima": np.ones(n).astype(int)})
+
+
+        # METADATA
+
+        info = {
+            "type": "seasonal",
+            "subtype": "PURE_SARIMA",
+            "periods": [s],
+            "period_meanings": {s: self.get_period_meanings(s)},
+            "seasonality_source": "stochastic_sarima",
+            "diff": d,
+            "seasonal_diff": D,
+            "unit_root":("unit_root" if d > 0 else "none"),
+            "seasonal_unit_root":("seasonal_unit_root" if D > 0 else "none"),
+            "noise_std": noise_std,
+            "initial_std": initial_std,
+            "ar_order": ar_order,
+            "ma_order": ma_order,
+            "ar_coefs": ar_coefs,
+            "ma_coefs": ma_coefs,
+            "seasonal_ar_order":seasonal_ar_order,
+            "seasonal_ma_order":seasonal_ma_order,
+            "seasonal_ar_coefs":seasonal_ar_coefs,
+            "seasonal_ma_coefs":seasonal_ma_coefs,
+            "fourier_used": False}
+
+        return df, info
+
+    def generate_deterministic_sarma(
+        self,
+        period=None,
+        amplitude=None,
+        noise_std=None,
+        scale_factor=1.0,
+        num_harmonics=1,
+        order_range=(1, 2),
+        coef_range=(-0.4, 0.4),
+        seasonal_strength_range=(0.8, 2.0),
+        allowed_periods=None,
+        min_cycles=6,
+        max_attempts=1000,
+        innovations=None,
+        additional_component=None):
+        """
+        Project-specific deterministic seasonal ARMA model.
+
+        IMPORTANT:
+        This is NOT textbook SARMA.
+
+        Standalone model
+        ----------------
+            Y_t = F_t + U_t
+
+        where:
+
+            phi(B) U_t
+                =
+            theta(B) epsilon_t
+
+        and F_t is deterministic Fourier seasonality.
+
+        Therefore the ONLY seasonal component is F_t.
+
+        Composition support
+        -------------------
+        innovations:
+            Optional external innovation sequence.
+
+            Example:
+                GARCH innovations -> ARMA -> Fourier
+
+            This allows combinations such as deterministic SARMA
+            with volatility-driven innovations.
+
+        additional_component:
+            Optional additional non-seasonal component added to
+            the internally generated ARMA background.
+
+            Example:
+                ARMA_internal + AR_external + Fourier
+
+            This allows technically composable base-family
+            combinations without changing the seasonal definition.
+
+        In standalone mode:
+
+            additional_component = None
+            innovations = None
+
+        and the model reduces to:
+
+            Y_t = U_t + F_t
+        """
+
+        n = self.length
+
+        # PERIOD
+
+        period, _ = self.choose_calendar_period(
+            period=period,
+            allowed_periods=allowed_periods,
+            min_cycles=min_cycles)
+
+        s = period
+
+        # =====================================================
+        # INNOVATION SCALE
+        # =====================================================
+
+        if noise_std is None:
+            noise_std = np.random.uniform(
+                0.1,
+                0.20
+            )
+
+        # =====================================================
+        # NON-SEASONAL ARMA PARAMETER GENERATION
+        # =====================================================
+
+        arma_process = None
+
+        for _ in range(max_attempts):
+
+            ar_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            ma_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            ar_coefs = np.random.uniform(
+                coef_range[0],
+                coef_range[1],
+                ar_order
+            )
+
+            ma_coefs = np.random.uniform(
+                coef_range[0],
+                coef_range[1],
+                ma_order
+            )
+
+            ar_poly = np.r_[
+                1.0,
+                -ar_coefs
+            ]
+
+            ma_poly = np.r_[
+                1.0,
+                ma_coefs
+            ]
+
+            candidate = ArmaProcess(
+                ar_poly,
+                ma_poly
+            )
+
+            if (
+                candidate.isstationary
+                and candidate.isinvertible
+            ):
+                arma_process = candidate
+                break
+
+        if arma_process is None:
+            raise RuntimeError(
+                "Could not generate valid ARMA background."
+            )
+
+        # =====================================================
+        # GENERATE NON-SEASONAL ARMA BACKGROUND
+        # =====================================================
+
+        burnin = 200
+
+        # -----------------------------------------------------
+        # Standard standalone SARMA:
+        # Gaussian innovations generated internally.
+        # -----------------------------------------------------
+
+        if innovations is None:
+
+            stochastic_component = (
+                arma_process.generate_sample(
+                    nsample=n,
+                    burnin=burnin,
+                    scale=noise_std
+                )
+            )
+
+        # -----------------------------------------------------
+        # External innovation process:
+        # e.g. GARCH -> ARMA
+        # -----------------------------------------------------
+
+        else:
+
+            innovations = np.asarray(
+                innovations,
+                dtype=float
+            )
+
+            if len(innovations) != n:
+                raise ValueError(
+                    "innovations length must match "
+                    f"series length. Expected {n}, "
+                    f"got {len(innovations)}."
+                )
+
+            # External innovations already contain their own
+            # scale/dynamics, so do NOT apply noise_std again.
+            #
+            # We also do not use burnin here because the supplied
+            # innovation sequence contains exactly n observations.
+            stochastic_component = (
+                arma_process.generate_sample(
+                    nsample=n,
+                    scale=1.0,
+                    distrvs=lambda size: innovations
+                )
+            )
+
+        # =====================================================
+        # OPTIONAL ADDITIONAL NON-SEASONAL COMPONENT
+        # =====================================================
+
+        nonseasonal_background = (
+            stochastic_component.copy()
+        )
+
+        if additional_component is not None:
+
+            # Accept either:
+            #   - a DataFrame containing "data"
+            #   - ndarray / list / other array-like object
+
+            if isinstance(
+                additional_component,
+                pd.DataFrame
+            ):
+
+                if (
+                    "data"
+                    not in additional_component.columns
+                ):
+                    raise ValueError(
+                        "additional_component DataFrame "
+                        "must contain a 'data' column."
+                    )
+
+                external_component = (
+                    additional_component[
+                        "data"
+                    ].to_numpy(
+                        dtype=float
+                    )
+                )
+
+            else:
+
+                external_component = np.asarray(
+                    additional_component,
+                    dtype=float
+                )
+
+            if len(external_component) != n:
+                raise ValueError(
+                    "additional_component length must "
+                    f"match series length. Expected {n}, "
+                    f"got {len(external_component)}."
+                )
+
+            nonseasonal_background = (
+                nonseasonal_background
+                + external_component
+            )
+
+        # =====================================================
+        # FOURIER SEASONALITY
+        # =====================================================
+
+        if amplitude is None:
+            amplitude = 1.0
+
+        (
+            fourier,
+            coefficients_by_period
+        ) = self._build_fourier_component(
+            periods=[s],
+            amplitudes=[amplitude],
+            num_harmonics=num_harmonics
+        )
+
+        # Raw Fourier coefficients returned by the shared
+        # Fourier builder.
+        fourier_coefficients = (
+            coefficients_by_period[0][
+                "coefficients"
+            ]
+        )
+
+        # -----------------------------------------------------
+        # Initial user/config supplied Fourier scaling
+        # -----------------------------------------------------
+
+        fourier *= scale_factor
+
+        # =====================================================
+        # CALIBRATE FOURIER AGAINST FINAL NON-SEASONAL
+        # BACKGROUND
+        # =====================================================
+
+        (
+            fourier,
+            calibration_factor,
+            seasonal_strength
+        ) = self._calibrate_fourier_to_background(
+            fourier=fourier,
+            background=nonseasonal_background,
+            difference_order=0,
+            seasonal_strength_range=
+                seasonal_strength_range
+        )
+
+        # =====================================================
+        # UPDATE FOURIER COEFFICIENTS TO FINAL SCALE
+        # =====================================================
+
+        # _build_fourier_component returned RAW coefficients.
+        #
+        # The Fourier signal experienced:
+        #
+        #   raw
+        #     * scale_factor
+        #     * calibration_factor
+        #
+        # Metadata must contain the FINAL coefficients because
+        # _get_fourier_context() reconstructs deterministic SARMA
+        # Fourier directly from these stored coefficients.
+
+        total_fourier_scale = (
+            scale_factor
+            * calibration_factor
+        )
+
+        for coef_info in fourier_coefficients:
+
+            coef_info["sin_coef"] *= (
+                total_fourier_scale
+            )
+
+            coef_info["cos_coef"] *= (
+                total_fourier_scale
+            )
+
+        # =====================================================
+        # FINAL SERIES
+        # =====================================================
+
+        series = (
+            nonseasonal_background
+            + fourier
+        )
+
+        # =====================================================
+        # DATAFRAME
+        # =====================================================
+
+        df = pd.DataFrame({
+            "time":
+                np.arange(n),
+
+            "data":
+                series,
+
+            "stationary":
+                np.zeros(
+                    n,
+                    dtype=int
+                ),
+
+            "seasonal":
+                np.ones(
+                    n,
+                    dtype=int
+                ),
+
+            "sarma":
+                np.ones(
+                    n,
+                    dtype=int
+                )
+        })
+
+        # =====================================================
+        # METADATA
+        # =====================================================
+
+        info = {
+            "type":
+                "seasonal",
+
+            "subtype":
+                "DETERMINISTIC_SARMA",
+
+            "periods":
+                [s],
+
+            "period_meanings": {
+                s:
+                    self.get_period_meanings(
+                        s
+                    )
+            },
+
+            # Deterministic SARMA has no integration.
+            "diff":
+                0,
+
+            "seasonal_diff":
+                0,
+
+            "unit_root":
+                "none",
+
+            "seasonal_unit_root":
+                "none",
+
+            "noise_std":
+                noise_std,
+
+            # Non-seasonal ARMA parameters
+            "ar_order":
+                ar_order,
+
+            "ma_order":
+                ma_order,
+
+            "ar_coefs":
+                ar_coefs,
+
+            "ma_coefs":
+                ma_coefs,
+
+            # No stochastic seasonal AR/MA terms.
+            "seasonal_ar_order":
+                0,
+
+            "seasonal_ma_order":
+                0,
+
+            "seasonal_ar_coefs":
+                np.array(
+                    [],
+                    dtype=float
+                ),
+
+            "seasonal_ma_coefs":
+                np.array(
+                    [],
+                    dtype=float
+                ),
+
+            # Deterministic Fourier metadata
+            "num_harmonics":
+                num_harmonics,
+
+            "fourier_coefficients":
+                fourier_coefficients,
+
+            "fourier_used":
+                True,
+
+            # Composition / calibration metadata
+            "seasonal_strength":
+                seasonal_strength,
+
+            "fourier_scale_factor":
+                total_fourier_scale,
+
+            "external_innovations_used":
+                innovations is not None,
+
+            "additional_component_used":
+                additional_component is not None
+        }
+
+        return df, info
+
+    def generate_deterministic_sarima(
+        self,
+        period=None,
+        amplitude=None,
+        noise_std=None,
+        scale_factor=1.0,
+        initial_std=0.2,
+        num_harmonics=1,
+        d=1,
+        order_range=(0, 2),
+        coef_range=(-0.4, 0.4),
+        seasonal_strength_range=(0.8, 2.0),
+        allowed_periods=None,
+        min_cycles=6,
+        max_attempts=1000,
+        innovations=None,
+        additional_component=None
+    ):
+        """
+        Project-specific deterministic seasonal ARIMA model.
+
+        IMPORTANT:
+        This is NOT textbook SARIMA.
+
+        Standalone model
+        ----------------
+            Y_t = F_t + Z_t
+
+        where:
+
+            phi(B) (1-B)^d Z_t
+                =
+            theta(B) epsilon_t
+
+        and F_t is deterministic Fourier seasonality.
+
+        There is deliberately:
+
+            - NO seasonal AR
+            - NO seasonal MA
+            - NO seasonal differencing D
+
+        Therefore Fourier is the ONLY source of seasonality.
+
+        Composition support
+        -------------------
+        innovations:
+            Optional external innovation sequence.
+
+            Example:
+                GARCH innovations -> ARIMA -> Fourier
+
+        additional_component:
+            Optional additional non-seasonal component added
+            AFTER ARIMA integration.
+
+            Example:
+                ARIMA_internal + external_component + Fourier
+        """
+
+        n = self.length
+
+        # =====================================================
+        # DIFFERENCING ORDER
+        # =====================================================
+
+        if d not in (0, 1):
+            raise ValueError(
+                "Currently d must be 0 or 1."
+            )
+
+        # =====================================================
+        # PERIOD
+        # =====================================================
 
         period, _ = self.choose_calendar_period(
             period=period,
@@ -2100,19 +4176,541 @@ class TimeSeriesGenerator:
 
         s = period
 
-        if amplitude is None:
-            base_series = np.random.normal(loc=0.0, scale=0.2, size=n)
-            amplitude = np.std(base_series) * np.random.uniform(0.8, 2.5)
+        # =====================================================
+        # INNOVATION SCALE
+        # =====================================================
 
-        deterministic_seasonality = np.zeros(n)
+        if noise_std is None:
+            noise_std = np.random.uniform(
+                0.1,
+                0.20
+            )
+
+        # =====================================================
+        # NON-SEASONAL ARMA CORE PARAMETER GENERATION
+        # =====================================================
+
+        arma_process = None
+
+        for _ in range(max_attempts):
+
+            ar_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            ma_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            if ar_order > 0:
+                ar_coefs = np.random.uniform(
+                    coef_range[0],
+                    coef_range[1],
+                    ar_order
+                )
+            else:
+                ar_coefs = np.array([], dtype=float)
+
+            if ma_order > 0:
+                ma_coefs = np.random.uniform(
+                    coef_range[0],
+                    coef_range[1],
+                    ma_order
+                )
+            else:
+                ma_coefs = np.array([], dtype=float)
+
+            ar_poly = np.r_[1.0, -ar_coefs]
+            ma_poly = np.r_[1.0, ma_coefs]
+
+            candidate = ArmaProcess(
+                ar_poly,
+                ma_poly
+            )
+
+            if (
+                candidate.isstationary
+                and candidate.isinvertible
+            ):
+                arma_process = candidate
+                break
+
+        if arma_process is None:
+            raise RuntimeError(
+                "Could not generate valid ARMA core."
+            )
+
+        # =====================================================
+        # GENERATE STATIONARY ARMA CORE
+        # =====================================================
+
+        burnin = 200
+
+        if innovations is None:
+
+            arma_core = (
+                arma_process.generate_sample(
+                    nsample=n,
+                    burnin=burnin,
+                    scale=noise_std
+                )
+            )
+
+        else:
+
+            innovations = np.asarray(
+                innovations,
+                dtype=float
+            )
+
+            if len(innovations) != n:
+                raise ValueError(
+                    "innovations length must match "
+                    f"series length. Expected {n}, "
+                    f"got {len(innovations)}."
+                )
+
+            arma_core = (
+                arma_process.generate_sample(
+                    nsample=n,
+                    scale=1.0,
+                    distrvs=lambda size: innovations
+                )
+            )
+
+        # =====================================================
+        # INTEGRATE d TIMES
+        # =====================================================
+
+        stochastic_component = arma_core.copy()
+
+        for _ in range(d):
+
+            integrated = np.zeros(n)
+
+            integrated[0] = np.random.normal(
+                0,
+                initial_std
+            )
+
+            for i in range(1, n):
+                integrated[i] = (
+                    integrated[i - 1]
+                    + stochastic_component[i]
+                )
+
+            stochastic_component = integrated
+
+        # =====================================================
+        # OPTIONAL ADDITIONAL NON-SEASONAL COMPONENT
+        # =====================================================
+
+        nonseasonal_background = (
+            stochastic_component.copy()
+        )
+
+        if additional_component is not None:
+
+            if isinstance(
+                additional_component,
+                pd.DataFrame
+            ):
+
+                if (
+                    "data"
+                    not in additional_component.columns
+                ):
+                    raise ValueError(
+                        "additional_component DataFrame "
+                        "must contain a 'data' column."
+                    )
+
+                external_component = (
+                    additional_component[
+                        "data"
+                    ].to_numpy(dtype=float)
+                )
+
+            else:
+
+                external_component = np.asarray(
+                    additional_component,
+                    dtype=float
+                )
+
+            if len(external_component) != n:
+                raise ValueError(
+                    "additional_component length must "
+                    f"match series length. Expected {n}, "
+                    f"got {len(external_component)}."
+                )
+
+            nonseasonal_background = (
+                nonseasonal_background
+                + external_component
+            )
+
+        # =====================================================
+        # FOURIER SEASONALITY
+        # =====================================================
+
+        if amplitude is None:
+            amplitude = 1.0
+
+        (
+            fourier,
+            coefficients_by_period
+        ) = self._build_fourier_component(
+            periods=[s],
+            amplitudes=[amplitude],
+            num_harmonics=num_harmonics
+        )
+
+        fourier_coefficients = (
+            coefficients_by_period[0][
+                "coefficients"
+            ]
+        )
+
+        # Initial config/user scale
+        fourier *= scale_factor
+
+        # =====================================================
+        # CALIBRATE FOURIER AGAINST FINAL NON-SEASONAL
+        # BACKGROUND
+        # =====================================================
+
+        (
+            fourier,
+            calibration_factor,
+            seasonal_strength
+        ) = self._calibrate_fourier_to_background(
+            fourier=fourier,
+            background=nonseasonal_background,
+            difference_order=d,
+            seasonal_strength_range=seasonal_strength_range
+        )
+
+        # =====================================================
+        # UPDATE FOURIER COEFFICIENTS TO FINAL SCALE
+        # =====================================================
+
+        total_fourier_scale = (
+            scale_factor
+            * calibration_factor
+        )
+
+        for coef_info in fourier_coefficients:
+            coef_info["sin_coef"] *= (
+                total_fourier_scale
+            )
+            coef_info["cos_coef"] *= (
+                total_fourier_scale
+            )
+
+        # =====================================================
+        # FINAL SERIES
+        # =====================================================
+
+        series = (
+            nonseasonal_background
+            + fourier
+        )
+
+        # =====================================================
+        # DATAFRAME
+        # =====================================================
+
+        df = pd.DataFrame({
+            "time": np.arange(n),
+            "data": series,
+            "arma_core": arma_core,
+            "stochastic_component": stochastic_component,
+            "fourier_component": fourier,
+            "stationary": np.zeros(n).astype(int),
+            "seasonal": np.ones(n).astype(int),
+            "sarima": np.ones(n).astype(int)
+        })
+
+        # =====================================================
+        # METADATA
+        # =====================================================
+
+        info = {
+            "type": "seasonal",
+            "subtype": "DETERMINISTIC_SARIMA",
+            "periods": [s],
+            "period_meanings": {
+                s: self.get_period_meanings(s)
+            },
+
+            "diff": d,
+            "seasonal_diff": 0,
+
+            "unit_root": (
+                "unit_root"
+                if d > 0 else "none"
+            ),
+
+            "seasonal_unit_root": "none",
+
+            "noise_std": noise_std,
+            "initial_std": initial_std,
+
+            "ar_order": ar_order,
+            "ma_order": ma_order,
+            "ar_coefs": ar_coefs,
+            "ma_coefs": ma_coefs,
+
+            "seasonal_ar_order": 0,
+            "seasonal_ma_order": 0,
+
+            "seasonal_ar_coefs": np.array([], dtype=float),
+            "seasonal_ma_coefs": np.array([], dtype=float),
+
+            "num_harmonics": num_harmonics,
+            "fourier_coefficients": fourier_coefficients,
+            "fourier_used": True,
+
+            "seasonal_strength": seasonal_strength,
+            "fourier_scale_factor": total_fourier_scale,
+
+            "external_innovations_used": innovations is not None,
+            "additional_component_used": additional_component is not None
+        }
+
+        return df, info
+
+    def generate_seasonal_unit_root_fourier(
+        self,
+        period=None,
+        amplitude=None,
+        noise_std=None,
+        scale_factor=1.0,
+        initial_std=0.2,
+        num_harmonics=1,
+        order_range=(0, 2),
+        coef_range=(-0.4, 0.4),
+        seasonal_strength_range=(0.8, 2.0),
+        allowed_periods=None,
+        min_cycles = 6, 
+        max_attempts=1000
+    ):
+        """
+        Special seasonal-unit-root + deterministic Fourier model.
+
+        This function implements the advisor-requested special case:
+
+            (1 - B^s) Y_t = F_t + u_t
+
+        equivalently:
+
+            Y_t - Y_{t-s} = F_t + u_t
+
+        where
+        -----
+        F_t :
+            deterministic Fourier seasonality with known period s
+
+        u_t :
+            stationary NON-SEASONAL ARMA process
+
+        Model properties
+        ----------------
+        - seasonal unit root: D = 1
+        - non-seasonal differencing: d = 0
+        - seasonal AR order: P = 0
+        - seasonal MA order: Q = 0
+
+        Important
+        ---------
+        Seasonal differencing recovers:
+
+            Delta_s Y_t = F_t + u_t
+
+        Therefore the deterministic Fourier component is directly
+        observable in the seasonally differenced representation.
+
+        This is a project-specific special case and is kept separate
+        from generate_deterministic_sarima() and generate_pure_sarima().
+        """
+
+        n = self.length
+        t = np.arange(n)
+
+
+        # =====================================================
+        # SEASONAL PERIOD
+        # =====================================================
+
+        period, _ = self.choose_calendar_period(
+            period=period,
+            allowed_periods=allowed_periods,
+            min_cycles=min_cycles
+        )
+
+        s = int(period)
+
+        if n <= s:
+            raise ValueError(
+                "Series length must be greater than seasonal period."
+            )
+
+        # =====================================================
+        # INNOVATION SCALE
+        # =====================================================
+
+        if noise_std is None:
+            noise_std = np.random.uniform(
+                0.1,
+                0.20
+            )
+
+        # =====================================================
+        # NON-SEASONAL STATIONARY ARMA ERROR
+        #
+        # phi(B) u_t = theta(B) epsilon_t
+        # =====================================================
+
+        arma_process = None
+
+        for _ in range(max_attempts):
+
+            ar_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            ma_order = np.random.randint(
+                order_range[0],
+                order_range[1] + 1
+            )
+
+            if ar_order > 0:
+
+                ar_coefs = np.random.uniform(
+                    coef_range[0],
+                    coef_range[1],
+                    ar_order
+                )
+
+            else:
+
+                ar_coefs = np.array(
+                    [],
+                    dtype=float
+                )
+
+            if ma_order > 0:
+
+                ma_coefs = np.random.uniform(
+                    coef_range[0],
+                    coef_range[1],
+                    ma_order
+                )
+
+            else:
+
+                ma_coefs = np.array(
+                    [],
+                    dtype=float
+                )
+
+            ar_poly = np.r_[
+                1.0,
+                -ar_coefs
+            ]
+
+            ma_poly = np.r_[
+                1.0,
+                ma_coefs
+            ]
+
+            candidate = ArmaProcess(
+                ar_poly,
+                ma_poly
+            )
+
+            if (
+                candidate.isstationary
+                and candidate.isinvertible
+            ):
+                arma_process = candidate
+                break
+
+        if arma_process is None:
+            raise RuntimeError(
+                "Could not generate valid stationary ARMA error process."
+            )
+
+        # =====================================================
+        # GENERATE STOCHASTIC ERROR u_t
+        # =====================================================
+
+        burnin = max(
+            200,
+            8 * s
+        )
+
+        stochastic_error = (
+            arma_process.generate_sample(
+                nsample=n,
+                burnin=burnin,
+                scale=noise_std
+            )
+        )
+
+        # =====================================================
+        # INITIAL FOURIER
+        # =====================================================
+
+        if amplitude is None:
+            amplitude = 1.0
+
+        fourier = np.zeros(
+            n
+        )
+
         fourier_coefficients = []
 
-        for k in range(1, num_harmonics + 1):
-            A_k = amplitude * np.random.uniform(0.5, 1.0) / k
-            B_k = amplitude * np.random.uniform(0.5, 1.0) / k
+        for k in range(
+            1,
+            num_harmonics + 1
+        ):
 
-            deterministic_seasonality += A_k * np.sin(2 * np.pi * k * t / s)
-            deterministic_seasonality += B_k * np.cos(2 * np.pi * k * t / s)
+            A_k = (
+                amplitude
+                * np.random.uniform(
+                    0.5,
+                    1.0
+                )
+                / k
+            )
+
+            B_k = (
+                amplitude
+                * np.random.uniform(
+                    0.5,
+                    1.0
+                )
+                / k
+            )
+
+            fourier += (
+                A_k
+                * np.sin(
+                    2 * np.pi * k * t / s
+                )
+            )
+
+            fourier += (
+                B_k
+                * np.cos(
+                    2 * np.pi * k * t / s
+                )
+            )
 
             fourier_coefficients.append({
                 "harmonic": k,
@@ -2120,139 +4718,286 @@ class TimeSeriesGenerator:
                 "cos_coef": B_k
             })
 
-        deterministic_seasonality = deterministic_seasonality * scale_factor
+        # =====================================================
+        # SCALE FACTOR
+        # =====================================================
 
-        sarma_error = None
+        fourier *= scale_factor
 
-        for _ in range(max_attempts):
-            ar_order = np.random.randint(order_range[0], order_range[1] + 1)
-            ma_order = np.random.randint(order_range[0], order_range[1] + 1)
+        for coef_info in fourier_coefficients:
 
-            seasonal_ar_order = np.random.randint(
-                seasonal_order_range[0],
-                seasonal_order_range[1] + 1
-            )
-            seasonal_ma_order = np.random.randint(
-                seasonal_order_range[0],
-                seasonal_order_range[1] + 1
+            coef_info["sin_coef"] *= (
+                scale_factor
             )
 
-            ar_coefs = np.random.uniform(coef_range[0], coef_range[1], ar_order)
-            ma_coefs = np.random.uniform(coef_range[0], coef_range[1], ma_order)
-
-            seasonal_ar_coefs = np.random.uniform(
-                seasonal_coef_range[0],
-                seasonal_coef_range[1],
-                seasonal_ar_order
+            coef_info["cos_coef"] *= (
+                scale_factor
             )
 
-            seasonal_ma_coefs = np.random.uniform(
-                seasonal_coef_range[0],
-                seasonal_coef_range[1],
-                seasonal_ma_order
+        # =====================================================
+        # FOURIER STRENGTH CALIBRATION
+        #
+        # Here u_t is stationary, so its standard deviation
+        # is a sensible reference scale.
+        # =====================================================
+
+        stochastic_scale = np.std(
+            stochastic_error
+        )
+
+        current_fourier_std = np.std(
+            fourier
+        )
+
+        seasonal_strength = (
+            np.random.uniform(
+                seasonal_strength_range[0],
+                seasonal_strength_range[1]
+            )
+        )
+
+        target_fourier_std = (
+            seasonal_strength
+            * stochastic_scale
+        )
+
+        if (
+            stochastic_scale > 1e-8
+            and current_fourier_std > 1e-8
+        ):
+
+            fourier_rescale_factor = (
+                target_fourier_std
+                / current_fourier_std
             )
 
-            nonseasonal_ar = np.r_[1, -ar_coefs]
-            nonseasonal_ma = np.r_[1, ma_coefs]
+            fourier *= (
+                fourier_rescale_factor
+            )
 
-            seasonal_ar = np.zeros(seasonal_ar_order * s + 1)
-            seasonal_ar[0] = 1
-            for i, coef in enumerate(seasonal_ar_coefs, start=1):
-                seasonal_ar[i * s] = -coef
+            for coef_info in fourier_coefficients:
 
-            seasonal_ma = np.zeros(seasonal_ma_order * s + 1)
-            seasonal_ma[0] = 1
-            for i, coef in enumerate(seasonal_ma_coefs, start=1):
-                seasonal_ma[i * s] = coef
-
-            ar_poly = np.convolve(nonseasonal_ar, seasonal_ar)
-            ma_poly = np.convolve(nonseasonal_ma, seasonal_ma)
-
-            arma_process = ArmaProcess(ar_poly, ma_poly)
-
-            if arma_process.isstationary and arma_process.isinvertible:
-                burnin = max(200, 8 * s)
-
-                sarma_error = arma_process.generate_sample(
-                    nsample=n,
-                    burnin=burnin,
-                    scale=1.0
+                coef_info["sin_coef"] *= (
+                    fourier_rescale_factor
                 )
 
-                error_std = np.std(sarma_error)
-                if error_std > 1e-8:
-                    sarma_error = (sarma_error - np.mean(sarma_error)) / error_std
+                coef_info["cos_coef"] *= (
+                    fourier_rescale_factor
+                )
 
-                break
+        else:
 
-        if sarma_error is None:
-            raise RuntimeError("Could not generate valid stationary SARMA error.")
+            fourier_rescale_factor = 1.0
 
-        if error_scale is None:
-            error_scale = amplitude * np.random.uniform(0.25, 0.60)
+        # =====================================================
+        # SEASONALLY DIFFERENCED PROCESS
+        #
+        # W_t = F_t + u_t
+        #
+        # and:
+        #
+        # (1-B^s)Y_t = W_t
+        # =====================================================
 
-        sarma_error = sarma_error * error_scale
+        seasonal_difference_source = (
+            fourier
+            + stochastic_error
+        )
 
-        noise_std = noise_std if noise_std is not None else np.random.uniform(0.01, 0.05)
-        observation_noise = np.random.normal(0, noise_std, size=n)
+        # =====================================================
+        # SEASONAL INTEGRATION
+        #
+        # Y_t = Y_{t-s} + W_t
+        # =====================================================
 
-        series = deterministic_seasonality + sarma_error + observation_noise
+        series = np.zeros(
+            n
+        )
+
+        # Initial seasonal states
+        series[:s] = np.random.normal(
+            loc=0.0,
+            scale=initial_std,
+            size=s
+        )
+
+        for i in range(
+            s,
+            n
+        ):
+
+            series[i] = (
+                series[i - s]
+                + seasonal_difference_source[i]
+            )
+
+        # =====================================================
+        # RECOVER SEASONAL DIFFERENCE
+        # =====================================================
+
+        seasonal_difference = np.full(
+            n,
+            np.nan
+        )
+
+        seasonal_difference[s:] = (
+            series[s:]
+            - series[:-s]
+        )
+
+        # =====================================================
+        # DATAFRAME
+        # =====================================================
 
         df = pd.DataFrame({
-            "time": np.arange(n),
-            "data": series,
-            "stationary": np.zeros(n).astype(int),
-            "seasonal": np.ones(n).astype(int),
-            "sarma": np.ones(n).astype(int)
+
+            "time":
+                np.arange(n),
+
+            "data":
+                series,
+
+            # Ground-truth deterministic component
+            "fourier_component":
+                fourier,
+
+            # Ground-truth stochastic ARMA contribution
+            "stochastic_error":
+                stochastic_error,
+
+            # Exact RHS used before seasonal integration
+            "seasonal_difference_source":
+                seasonal_difference_source,
+
+            # Recovered from final Y_t
+            "seasonal_difference":
+                seasonal_difference,
+
+            "stationary":
+                np.zeros(n).astype(int),
+
+            "seasonal":
+                np.ones(n).astype(int),
+
+            "seasonal_unit_root":
+                np.ones(n).astype(int)
         })
 
+        # =====================================================
+        # METADATA
+        # =====================================================
+
         info = {
-            "type": "seasonal",
-            "subtype": "SARMA",
-            "periods": [s],
+
+            "type":
+                "seasonal",
+
+            "subtype":
+                "SEASONAL_UNIT_ROOT_FOURIER",
+
+            "periods":
+                [s],
+
             "period_meanings": {
                 s: self.get_period_meanings(s)
             },
-            "diff": 0,
-            "seasonal_diff": 0,
-            "seasonal_unit_root": "none",
-            "amplitudes": amplitude,
-            "noise_std": noise_std,
-            "scale_factor": scale_factor,
-            "num_harmonics": num_harmonics,
-            "fourier_coefficients": fourier_coefficients,
-            "ar_order": ar_order,
-            "ma_order": ma_order,
-            "seasonal_ar_order": seasonal_ar_order,
-            "seasonal_ma_order": seasonal_ma_order,
-            "ar_coefs": ar_coefs,
-            "ma_coefs": ma_coefs,
-            "seasonal_ar_coefs": seasonal_ar_coefs,
-            "seasonal_ma_coefs": seasonal_ma_coefs
+
+            "seasonality_source":
+                "fourier_in_seasonal_difference_equation",
+
+            "stochastic_background":
+                "ARMA",
+
+            # ---------------------------------------------
+            # DIFFERENCING
+            # ---------------------------------------------
+
+            "diff":
+                0,
+
+            "seasonal_diff":
+                1,
+
+            "unit_root":
+                "none",
+
+            "seasonal_unit_root":
+                "seasonal_unit_root",
+
+            # ---------------------------------------------
+            # NON-SEASONAL ARMA
+            # ---------------------------------------------
+
+            "ar_order":
+                ar_order,
+
+            "ma_order":
+                ma_order,
+
+            "ar_coefs":
+                ar_coefs,
+
+            "ma_coefs":
+                ma_coefs,
+
+            # Deliberately no seasonal ARMA terms
+            "seasonal_ar_order":
+                0,
+
+            "seasonal_ma_order":
+                0,
+
+            "seasonal_ar_coefs":
+                np.array(
+                    [],
+                    dtype=float
+                ),
+
+            "seasonal_ma_coefs":
+                np.array(
+                    [],
+                    dtype=float
+                ),
+
+            # ---------------------------------------------
+            # FOURIER
+            # ---------------------------------------------
+
+            "num_harmonics":
+                num_harmonics,
+
+            "fourier_coefficients":
+                fourier_coefficients,
+
+            "seasonal_strength":
+                seasonal_strength,
+
+            "fourier_std":
+                np.std(
+                    fourier
+                ),
+
+            "stochastic_scale":
+                stochastic_scale,
+
+            "fourier_rescale_factor":
+                fourier_rescale_factor,
+
+            # ---------------------------------------------
+            # OTHER
+            # ---------------------------------------------
+
+            "noise_std":
+                noise_std,
+
+            "initial_std":
+                initial_std,
+
+            "fourier_used":
+                True
         }
 
         return df, info
-
-    #VOLATILITY
-
-    def generate_volatility(self, kind = None):
-        if kind == 'arch':
-            series, info = self.generate_arch_series(self.length)
-        elif kind == 'garch':
-            series, info = self.generate_garch_series(self.length)
-        elif kind == 'egarch':
-            series, info = self.generate_egarch_series(self.length)
-        elif kind == 'aparch':
-            series, info = self.generate_aparch_series(self.length)
-
-        df = pd.DataFrame({
-            'time': np.arange(self.length),
-            'data': series,
-            'stationary': (np.zeros(self.length)).astype(int),
-            'seasonal': np.zeros(self.length).astype(int),
-        })
-        return df, info
-
 
     def generate_seasonality_from_base_series(
         self,
@@ -2263,25 +5008,105 @@ class TimeSeriesGenerator:
         """
         Generates seasonal base series from scratch.
 
-        kind:
-            "single"   -> deterministic single Fourier seasonality
-            "multiple" -> deterministic multiple Fourier seasonality
-            "sarima"   -> seasonal unit root:
-                          Y_t - Y_{t-s} = Fourier(t) + noise
-            "sarma"    -> deterministic Fourier seasonality with SARMA errors
+        Main dataset seasonal types
+        ---------------------------
+        "single"
+            -> deterministic single Fourier seasonality
+
+        "multiple"
+            -> deterministic multiple Fourier seasonality
+
+        "sarma"
+            -> deterministic Fourier seasonality
+            + non-seasonal stationary ARMA background
+
+            Y_t = F_t + U_t
+
+            where:
+                phi(B) U_t = theta(B) epsilon_t
+
+        "sarima"
+            -> deterministic Fourier seasonality
+            + non-seasonal ARIMA background
+
+            Y_t = F_t + Z_t
+
+            where:
+                phi(B)(1-B)^d Z_t
+                    = theta(B) epsilon_t
+
+
+        Additional experimental / reference types
+        -----------------------------------------
+        "pure_sarma"
+            -> textbook stochastic SARMA
+
+            phi(B) Phi(B^s) Y_t
+                = theta(B) Theta(B^s) epsilon_t
+
+        "pure_sarima"
+            -> textbook stochastic SARIMA
+
+            phi(B) Phi(B^s)
+            (1-B)^d (1-B^s)^D Y_t
+                =
+            theta(B) Theta(B^s) epsilon_t
+
+        "seasonal_unit_root"
+            -> special deterministic Fourier
+            seasonal-unit-root model
+
+            (1-B^s)Y_t = F_t + u_t
+
+            where u_t is a stationary non-seasonal ARMA process.
+
+
+        Important
+        ---------
+        If kind is None, only the four MAIN dataset seasonal
+        families are sampled:
+
+            single
+            multiple
+            sarma
+            sarima
+
+        Pure stochastic and special seasonal-unit-root cases
+        must be requested explicitly.
         """
 
+        # =====================================================
+        # DEFAULT DATASET SAMPLING
+        # =====================================================
+
         if kind is None:
-            kind = random.choice(["single", "multiple", "sarma", "sarima"])
+            kind = random.choice([
+                "single",
+                "multiple",
+                "sarma",
+                "sarima"
+            ])
+
+        # =====================================================
+        # SINGLE FOURIER SEASONALITY
+        # =====================================================
 
         if kind == "single":
+
             df, info = self.generate_single_seasonality(
                 period=period,
                 num_harmonics=1
             )
 
+        # =====================================================
+        # MULTIPLE FOURIER SEASONALITY
+        # =====================================================
+
         elif kind == "multiple":
-            periods = self.normalize_period_list(period)
+
+            periods = self.normalize_period_list(
+                period
+            )
 
             df, info = self.generate_multiple_seasonality(
                 num_components=num_components,
@@ -2289,21 +5114,74 @@ class TimeSeriesGenerator:
                 num_harmonics=1
             )
 
-        elif kind == "sarima":
-            df, info = self.generate_sarima_series(
-                period=period,
-                num_harmonics=1
-            )
+        # =====================================================
+        # DETERMINISTIC SARMA
+        #
+        # Fourier + ARMA
+        # =====================================================
 
         elif kind == "sarma":
-            df, info = self.generate_sarma_series(
+
+            df, info = self.generate_deterministic_sarma(
                 period=period,
                 num_harmonics=1
             )
 
+        # =====================================================
+        # DETERMINISTIC SARIMA
+        #
+        # Fourier + ARIMA
+        # =====================================================
+
+        elif kind == "sarima":
+
+            df, info = self.generate_deterministic_sarima(
+                period=period,
+                num_harmonics=1
+            )
+
+        # =====================================================
+        # PURE STOCHASTIC SARMA
+        # =====================================================
+
+        elif kind == "pure_sarma":
+
+            df, info = self.generate_pure_sarma(
+                period=period
+            )
+
+        # =====================================================
+        # PURE STOCHASTIC SARIMA
+        # =====================================================
+
+        elif kind == "pure_sarima":
+
+            df, info = self.generate_pure_sarima(
+                period=period
+            )
+
+        # =====================================================
+        # SPECIAL SEASONAL-UNIT-ROOT + FOURIER CASE
+        # =====================================================
+
+        elif kind == "seasonal_unit_root":
+
+            df, info = self.generate_seasonal_unit_root_fourier(
+                period=period,
+                num_harmonics=1
+            )
+
+        # =====================================================
+        # INVALID KIND
+        # =====================================================
+
         else:
+
             raise ValueError(
-                "Invalid kind. Choose from 'single', 'multiple', 'sarma' or 'sarima'."
+                "Invalid kind. Choose from: "
+                "'single', 'multiple', 'sarma', 'sarima', "
+                "'pure_sarma', 'pure_sarima', "
+                "or 'seasonal_unit_root'."
             )
 
         return df, info

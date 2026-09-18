@@ -30,6 +30,8 @@ Every generation starts with a **base series**. The base defines the core statis
 | | `"arima"` | ARIMA(p,d,q) |
 | **Seasonal** | `"sarma"` | Seasonal ARMA |
 | | `"sarima"` | Seasonal ARIMA |
+| | `"single_seasonality"` | Single seasonality |
+| | `"multiple_seasonality"` | Multiple seasonality |
 | **Volatility** | `"arch"` | ARCH process |
 | | `"garch"` | GARCH(1,1) |
 | | `"egarch"` | Exponential GARCH |
@@ -51,18 +53,9 @@ Features are applied **on top of** the selected base series. Multiple features c
 | Linear trend | `"linear_trend"` | `direction`: `"upward"` / `"downward"` |
 | Quadratic trend | `"quadratic_trend"` | `direction`, `location`: `"beginning"` / `"center"` / `"end"` |
 | Cubic trend | `"cubic_trend"` | `direction`, `location` |
-| Exponential trend | `"exponential_trend"` | `direction` |
+| Exponential trend | `"exponential_trend"` | 
+| Damped trend | `"damped_trend"` | 
 
-### Seasonality (as a feature)
-
-| Feature | `feature_name` | Parameters |
-|---------|----------------|------------|
-| Single seasonality | `"single_seasonality"` | — |
-| Multiple seasonality | `"multiple_seasonality"` | `num_components`: int |
-| SARMA overlay | `"sarma"` | — |
-| SARIMA overlay | `"sarima"` | — |
-
-> **Note:** `sarma` and `sarima` can be used as both base and feature. When used as a feature, they **replace** the base series output.
 
 ### Volatility (as a feature)
 
@@ -208,7 +201,7 @@ cfg = load_config(dataset={
 run(cfg)
 ```
 
-### Four features: AR + seasonality + structural break + anomaly
+### Four features: AR + trend + structural break + anomaly
 
 ```python
 cfg = load_config(dataset={
@@ -219,7 +212,6 @@ cfg = load_config(dataset={
     "output_dir":   "output/combinations",
     "output_name":  "ar_complex.parquet",
     "features": {
-        "single_seasonality": {"enabled": True},
         "linear_trend":       {"enabled": True, "direction": "upward"},
         "mean_shift":         {"enabled": True, "mode": "single", "direction": "down"},
         "point_anomaly":      {"enabled": True, "mode": "single", "location": "random"},
@@ -229,7 +221,7 @@ run(cfg)
 ```
 
 > **Feature application order** (always applied in this sequence, regardless of config order):
-> `volatility → seasonality → trend → structural_break → anomaly`
+> `volatility → trend → structural_break → anomaly`
 
 ---
 
@@ -319,14 +311,14 @@ SCENARIOS = [
             },
         },
     },
-    # Triple: base + seasonality + anomaly
+    # Triple: base + trend + anomaly
     {
-        "label": "arima_seasonal_anomaly",
+        "label": "arima_trend_anomaly",
         "dataset": {
             "base_series": "arima",
             "num_series": 10,
             "features": {
-                "single_seasonality": {"enabled": True},
+                "linear_trend": {"enabled": True,  "direction": "downward"},
                 "point_anomaly":      {"enabled": True, "mode": "single", "location": "random"},
             },
         },

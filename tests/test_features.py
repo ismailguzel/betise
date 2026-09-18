@@ -21,8 +21,19 @@ def _gen(base: str, features: dict):
         "num_series": 1,
         "length_range": [LENGTH, LENGTH],
         "random_seed": SEED,
-        "features": features,
     })
+
+    # Tests must start from a feature-free configuration.
+    # Otherwise enabled defaults from dataset.json leak into individual tests.
+    for feature_cfg in cfg["dataset"]["features"].values():
+        if isinstance(feature_cfg, dict) and "enabled" in feature_cfg:
+            feature_cfg["enabled"] = False
+
+    # Enable only the features explicitly requested by this test.
+    for feature_name, settings in features.items():
+        cfg["dataset"]["features"].setdefault(feature_name, {})
+        cfg["dataset"]["features"][feature_name].update(settings)
+
     df, _ = generate_dataframe(cfg)
     return df
 
@@ -69,9 +80,30 @@ def test_contextual_anomaly():
 
 
 # ── Structural break features ─────────────────────────────────────────────────
-@pytest.mark.parametrize("feat", ["mean_shift", "variance_shift", "trend_shift"])
+@pytest.mark.parametrize("feat", [
+    "mean_shift",
+    "variance_shift",
+])
 def test_structural_break(feat):
-    df = _gen("ar", {feat: {"enabled": True}})
+    df = _gen("ar", {
+        feat: {"enabled": True}
+    })
+
+    assert len(df) == LENGTH
+    assert np.isfinite(df["data"].values).all()
+
+
+def test_trend_shift():
+    df = _gen("ar", {
+        "linear_trend": {
+            "enabled": True,
+            "direction": "upward",
+        },
+        "trend_shift": {
+            "enabled": True,
+        },
+    })
+
     assert len(df) == LENGTH
     assert np.isfinite(df["data"].values).all()
 

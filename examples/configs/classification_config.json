@@ -46,7 +46,6 @@
     "anomaly": [
       {"base_series": "ar", "n": 667, "features": {"point_anomaly":      {"enabled": true, "mode": "single", "location": "random"}}},
       {"base_series": "ar", "n": 667, "features": {"collective_anomaly": {"enabled": true, "mode": "single", "location": "random"}}},
-      {"base_series": "ar", "n": 666, "features": {"contextual_anomaly": {"enabled": true, "mode": "single", "location": "random"}}}
     ],
 
     "structural_break": [

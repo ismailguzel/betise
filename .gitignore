@@ -5,6 +5,9 @@ __pycache__/
 *.pyd
 *.so
 
+.ruff_cache/
+
+
 # Distribution / packaging
 dist/
 build/
@@ -57,3 +60,5 @@ Thumbs.db
 .gsd/
 .bg-shell/
 .mplconfig/
+
+test_outputs/

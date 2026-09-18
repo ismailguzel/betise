@@ -57,7 +57,7 @@ Multiple features can be stacked on top of any base type:
 
 | Category | Features |
 |---|---|
-| Trend | `linear_trend`, `quadratic_trend`, `cubic_trend`, `exponential_trend` |
+| Trend | `linear_trend`, `quadratic_trend`, `cubic_trend`, `exponential_trend`,`damped_trend` |
 | Anomaly | `point_anomaly`, `collective_anomaly`, `contextual_anomaly` |
 | Structural break | `mean_shift`, `variance_shift`, `trend_shift` |
 

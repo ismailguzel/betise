@@ -8,7 +8,7 @@
   "base_series": "ar",
   "features": {
     "linear_trend": {
-      "enabled": true,
+      "enabled": false,
       "direction": "upward"
     },
     "quadratic_trend": {
@@ -24,6 +24,10 @@
     "exponential_trend": {
       "enabled": false,
       "direction": "upward"
+    },
+    "damped_trend": {
+    "enabled": false,
+    "direction": "upward"
     },
     "arch": {
       "enabled": false
