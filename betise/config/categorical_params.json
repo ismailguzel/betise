@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+
+  "_meta": {
+    "description": "Categorical/discrete BeTiSe feature choices. Continuous numeric ranges belong in params.json.",
+    "variant_policy": "runtime_cartesian_product"
+  },
+
+  "features": {
+
+    "linear_trend": {
+      "axes": {
+        "direction": ["up", "down"]
+      }
+    },
+
+    "quadratic_trend": {
+      "axes": {
+        "direction": ["up", "down"],
+        "location": ["left", "center", "right"]
+      }
+    },
+
+    "cubic_trend": {
+      "axes": {
+        "direction": ["up", "down"],
+        "location": ["left", "center", "right"]
+      }
+    },
+
+    "exponential_trend": {
+      "axes": {
+        "direction": ["up", "down"]
+      }
+    },
+
+    "damped_trend": {
+      "axes": {
+        "direction": ["up", "down"]
+      }
+    },
+
+    "mean_shift": {
+      "cases": {
+
+        "single": {
+          "fixed": {
+            "mode": "single",
+            "num_breaks": 1
+          },
+          "axes": {
+            "location": ["beginning", "middle", "end"],
+            "direction": ["up", "down"]
+          }
+        },
+
+        "multiple": {
+          "fixed": {
+            "mode": "multiple",
+            "direction_strategy": "random"
+          },
+          "axes": {
+            "num_breaks": [2, 3, 4]
+          }
+        }
+
+      }
+    },
+
+    "variance_shift": {
+      "cases": {
+
+        "single": {
+          "fixed": {
+            "mode": "single",
+            "num_breaks": 1
+          },
+          "axes": {
+            "location": ["beginning", "middle", "end"],
+            "direction": ["up", "down"]
+          }
+        },
+
+        "multiple": {
+          "fixed": {
+            "mode": "multiple",
+            "direction_strategy": "random"
+          },
+          "axes": {
+            "num_breaks": [2, 3, 4]
+          }
+        }
+
+      }
+    },
+
+    "trend_shift": {
+      "cases": {
+
+        "single": {
+          "fixed": {
+            "mode": "single",
+            "num_breaks": 1
+          },
+          "axes": {
+            "location": ["beginning", "middle", "end"],
+            "change_type": [
+              "direction_change",
+              "magnitude_change",
+              "direction_and_magnitude_change"
+            ]
+          }
+        },
+
+        "multiple": {
+          "fixed": {
+            "mode": "multiple"
+          },
+          "axes": {
+            "num_breaks": [2, 3, 4],
+            "change_type": [
+              "direction_change",
+              "magnitude_change",
+              "direction_and_magnitude_change",
+              "mixed"
+            ]
+          }
+        }
+
+      }
+    },
+
+    "point_anomaly": {
+      "cases": {
+
+        "single": {
+          "fixed": {
+            "mode": "single",
+            "num_anomalies": 1
+          },
+          "axes": {
+            "location": ["beginning", "middle", "end"],
+            "is_spike": [true, false]
+          }
+        },
+
+        "multiple": {
+          "fixed": {
+            "mode": "multiple",
+            "count_strategy": "auto"
+          }
+        }
+
+      }
+    },
+
+    "collective_anomaly": {
+      "cases": {
+
+        "single": {
+          "fixed": {
+            "mode": "single",
+            "num_anomalies": 1
+          },
+          "axes": {
+            "location": ["beginning", "middle", "end"],
+            "shape_strategy": [
+              "rectangular",
+              "gaussian",
+              "triangular",
+              "ramp",
+              "decay"
+            ]
+          }
+        },
+
+        "multiple": {
+          "fixed": {
+            "mode": "multiple"
+          },
+          "axes": {
+            "num_anomalies": [2, 3, 4],
+            "shape_strategy": [
+              "rectangular",
+              "gaussian",
+              "triangular",
+              "ramp",
+              "decay",
+              "mixed"
+            ]
+          }
+        }
+
+      }
+    },
+
+    "contextual_anomaly": {
+      "cases": {
+
+        "single": {
+          "fixed": {
+            "mode": "single",
+            "num_anomalies": 1
+          },
+          "axes": {
+            "location": ["beginning", "middle", "end"]
+          }
+        },
+
+        "multiple": {
+          "fixed": {
+            "mode": "multiple"
+          },
+          "axes": {
+            "num_anomalies": [2, 3, 4]
+          }
+        }
+
+      }
+    }
+
+  }
+}

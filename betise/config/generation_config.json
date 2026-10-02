@@ -1,0 +1,21 @@
+{
+  "output_dir": "generated-dataset/config_test",
+
+  "min_size": 3,
+  "max_size": 3,
+
+  "categorical_mode": "sampled",
+  "variants_per_type": 1,
+
+  "series_per_recipe": 2,
+
+  "length_range": [300, 350],
+
+  "seed": 42,
+
+  "shard_size": 5,
+
+  "max_recipes": 10,
+
+  "allow_large_run": false
+}

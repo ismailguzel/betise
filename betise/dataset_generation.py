@@ -376,57 +376,36 @@ def generate_base_series(
         )
 
 
-    if base_series == "sarma":
-
-        p = seasonality_cfg.get(
-            "sarma",
-            {}
-        )
-
-        period = p.get("period")
-
-        if isinstance(period, list):
-            valid_periods = ts.get_valid_calendar_periods(
-                allowed_periods=period
-            )
-
-            period = (
-                int(random.choice(valid_periods))
-                if valid_periods
-                else None
-            )
-
-        amplitude = (
-            _sample_value(p["amplitude"])
-            if "amplitude" in p
-            else None
-        )
-
-        return ts.generate_deterministic_sarma(
-            period=period,
-            amplitude=amplitude,
-            innovations=innovations
-        )
-
-
-    if base_series == "sarima":
-
-        p = seasonality_cfg.get("sarima",{})
+    if base_series == "pure_sarma":
+        p = seasonality_cfg.get("pure_sarma", {})
         period = p.get("period")
 
         if isinstance(period, list):
             valid_periods = ts.get_valid_calendar_periods(allowed_periods=period)
-            period = (int(random.choice(valid_periods)) if valid_periods else None)
+            period = int(random.choice(valid_periods)) if valid_periods else None
 
-        amplitude = (_sample_value(p["amplitude"]) if "amplitude" in p else None)
-
-        d = int(_sample_value(p.get("diff", 1)))
-
-        return ts.generate_deterministic_sarima(
+        return ts.generate_pure_sarma(
             period=period,
-            amplitude=amplitude,
+            innovations=innovations
+        )
+
+    if base_series == "pure_sarima":
+        p = seasonality_cfg.get("pure_sarima", {})
+        period = p.get("period")
+
+        if isinstance(period, list):
+            valid_periods = ts.get_valid_calendar_periods(allowed_periods=period)
+            period = int(random.choice(valid_periods)) if valid_periods else None
+
+        d = int(_sample_value(p.get("diff", 0)))
+        D = int(_sample_value(p.get("seasonal_diff", 1)))
+
+        return ts.generate_pure_sarima(
+            period=period,
             d=d,
-            innovations=innovations)
+            D=D,
+            innovations=innovations
+        )
     
     # Volatility base: arch, garch, egarch, aparch
     if base_series in VOLATILITY_BASE_SERIES:
@@ -582,7 +561,7 @@ def apply_feature(
         if mode == "multiple":
             return ts.generate_point_anomalies(df, scale_factor=scale_factor)
         location = feature_cfg.get("location", "middle")
-        return ts.generate_point_anomaly(df, location=location, scale_factor=scale_factor)
+        return ts.generate_point_anomaly(df, location=location, scale_factor=scale_factor, is_spike= is_spike)
 
     if feature_name == "collective_anomaly":
         p            = params_cfg.get("anomalies", {}).get("collective_anomaly", {})
@@ -958,7 +937,7 @@ def generate_dataframe(cfg: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Any
             elif (
                 base_series in {"ar", "ma", "arma"}
                 or base_series in STOCHASTIC_BASE_SERIES
-                or base_series in {"sarma", "sarima"}
+                or base_series in {"pure_sarma", "pure_sarima"}
             ):
                 innovations, volatility_info = (
                     ts.generate_volatility(

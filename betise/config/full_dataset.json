@@ -18,8 +18,7 @@
       "Multiple mean/variance shift directions are sampled randomly per break; direction is not a dataset variant axis.",
       "Trend shift inherits the initial linear-trend direction; change_type is enumerated separately.",
       "Multiple collective anomalies use a uniform shape strategy or a mixed strategy instead of explicitly enumerating every ordered per-event shape sequence.",
-      "Multiple point anomalies currently use the generator's length-dependent automatic count.",
-      "pure_sarma, pure_sarima, and seasonal_unit_root_fourier remain excluded from canonical compositions."
+      "Multiple point anomalies currently use the generator's length-dependent automatic count."
     ],
     "variant_expansion": "runtime_cartesian_product",
     "explicit_template_count": 8246,

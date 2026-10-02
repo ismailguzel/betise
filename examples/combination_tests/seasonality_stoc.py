@@ -5,11 +5,11 @@ Seasonality + Stochastic
 Valid combinations
 ------------------
 Single:
-    RW / RWD / ARI / IMA
-    ARIMA + single excluded: redundant with deterministic SARIMA.
+    RW / RWD / ARI / IMA / ARIMA
 
 Multiple:
     RW / RWD / ARI / IMA / ARIMA
+
 
 Model
 -----
@@ -93,8 +93,7 @@ def case_label(kind, periods):
 
 
 def is_valid_combination(kind, stochastic_kind):
-    # ARIMA + single is already represented by deterministic SARIMA.
-    return not (kind == "single" and stochastic_kind == "arima")
+    return True
 
 
 def stochastic_difference_order(stochastic_kind, info):

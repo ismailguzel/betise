@@ -1,0 +1,23 @@
+{
+  "mode": "requested",
+  "output_dir": "generated-dataset/invalid_smoke",
+
+  "base_components": [
+    "garch"
+  ],
+
+  "features": [
+    "variance_shift"
+  ],
+
+  "num_series": 10,
+
+  "categorical_mode": "sampled",
+  "variants_per_type": 3,
+
+  "length": "medium",
+
+  "seed": 42,
+
+  "shard_size": 5
+}

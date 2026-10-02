@@ -1,0 +1,25 @@
+{
+  "mode": "requested",
+
+  "output_dir": "generated-dataset/smoke_requested",
+
+  "base_components": [
+    "arch"
+  ],
+
+  "features": [
+    "point_anomaly",
+    "mean_shift"
+  ],
+
+  "num_series": 10,
+
+  "categorical_mode": "sampled",
+  "variants_per_type": 3,
+
+  "length": "medium",
+
+  "seed": 42,
+
+  "shard_size": 5
+}

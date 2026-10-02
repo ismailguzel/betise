@@ -19,8 +19,8 @@ The planner resolves a valid composition into:
         -> structural break
         -> anomaly
 
-Deterministic SARMA/SARIMA are treated as internal seasonal cores because
-their Fourier component is already generated inside the base generator.
+Pure SARMA/SARIMA are treated as internal stochastic seasonal cores because
+their seasonal AR/MA dynamics are generated inside the base generator.
 """
 
 from __future__ import annotations
@@ -79,8 +79,8 @@ EXTERNAL_FOURIER_BASES = {
 }
 
 INTERNAL_SEASONAL_CORES = {
-    "sarma",
-    "sarima",
+    "pure_sarma",
+    "pure_sarima",
 }
 
 DYNAMIC_CORE_FAMILIES = {
@@ -246,7 +246,7 @@ def build_base_generation_plan(
 
     if dynamic_cores and internal_seasonal:
         raise ValueError(
-            "A dynamic core and deterministic SARMA/SARIMA cannot both be "
+            "A dynamic core and pure SARMA/SARIMA cannot both be "
             "execution cores in the same canonical composition."
         )
 

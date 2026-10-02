@@ -14,9 +14,8 @@ Important project conventions
 - Volatility may still be configured under ``dataset.features`` for legacy
   config compatibility, but when it participates in a validated combination
   it is treated as a mathematical BASE component.
-- ``pure_sarma``, ``pure_sarima`` and ``seasonal_unit_root_fourier`` are
-  experimental/reference generators and are intentionally outside the
-  canonical combination table.
+- ``pure_sarma`` and ``pure_sarima`` are canonical stochastic seasonal
+  base generators.
 - Component-preservation statistics are validated by dedicated combination
   tests. They are not re-run inside the dataset-generation loop.
 """
@@ -95,8 +94,8 @@ STOCHASTIC_BASE_SERIES = {
 SEASONAL_BASE_SERIES = {
     "single_seasonality",
     "multiple_seasonality",
-    "sarma",
-    "sarima",
+    "pure_sarma",
+    "pure_sarima",
 }
 
 VOLATILITY_BASE_SERIES = {
@@ -118,11 +117,6 @@ CANONICAL_BASE_SERIES = (
     | FRACTIONAL_BASE_SERIES
 )
 
-EXPERIMENTAL_BASE_SERIES = {
-    "pure_sarma",
-    "pure_sarima",
-    "seasonal_unit_root_fourier",
-}
 
 
 # ============================================================================
@@ -243,8 +237,6 @@ def base_family(base_series: str) -> str:
     if base_series in FRACTIONAL_BASE_SERIES:
         return "fractional"
 
-    if base_series in EXPERIMENTAL_BASE_SERIES:
-        return "experimental"
 
     raise ValueError(
         f"Unknown base series '{base_series}'. "
@@ -294,21 +286,9 @@ def resolve_base_pair_rule(component_a: str, component_b: str) -> Rule:
         )
 
     if component_a not in CANONICAL_BASE_SERIES:
-        if component_a in EXPERIMENTAL_BASE_SERIES:
-            return Rule(
-                EXCLUDE_CONFLICT,
-                f"'{component_a}' is experimental/reference-only and is "
-                "outside the canonical combination table.",
-            )
         raise ValueError(f"Unknown base component: {component_a}")
 
     if component_b not in CANONICAL_BASE_SERIES:
-        if component_b in EXPERIMENTAL_BASE_SERIES:
-            return Rule(
-                EXCLUDE_CONFLICT,
-                f"'{component_b}' is experimental/reference-only and is "
-                "outside the canonical combination table.",
-            )
         raise ValueError(f"Unknown base component: {component_b}")
 
     family_a = base_family(component_a)
@@ -372,26 +352,23 @@ def resolve_base_pair_rule(component_a: str, component_b: str) -> Rule:
     # ------------------------------------------------------------------
 
     if family_pair == {"stationary", "seasonality"}:
-        seasonal = (
-            component_a
-            if family_a == "seasonality"
-            else component_b
-        )
+        seasonal = component_a if family_a == "seasonality" else component_b
 
         if seasonal in {"single_seasonality", "multiple_seasonality"}:
             return Rule(
                 ALLOW_VALIDATED,
-                "Deterministic Fourier seasonality can be added to a "
-                "stationary background while preserving both components.",
+                "Deterministic Fourier seasonality can be added to a stationary "
+                "background while preserving both components.",
                 (ADDITIVE_FOURIER,),
             )
 
-        return Rule(
-            EXCLUDE_REDUNDANT,
-            "Deterministic SARMA/SARIMA already contains an internal "
-            "non-seasonal ARMA/ARIMA background; adding another stationary "
-            "base duplicates that structure.",
-        )
+        if seasonal in {"pure_sarma", "pure_sarima"}:
+            return Rule(
+                EXCLUDE_REDUNDANT,
+                "Pure SARMA/SARIMA already contains an internal non-seasonal "
+                "ARMA structure, so adding another stationary base duplicates "
+                "short-memory dynamics.",
+            )
 
     # ------------------------------------------------------------------
     # Stationary + Fractional
@@ -422,45 +399,27 @@ def resolve_base_pair_rule(component_a: str, component_b: str) -> Rule:
     # ------------------------------------------------------------------
 
     if family_pair == {"stochastic", "seasonality"}:
-        stochastic = (
-            component_a
-            if family_a == "stochastic"
-            else component_b
-        )
-
-        seasonal = (
-            component_a
-            if family_a == "seasonality"
-            else component_b
-        )
-
-        if seasonal in {"sarma", "sarima"}:
-            return Rule(
-                EXCLUDE_NON_IDENTIFIABLE,
-                "Deterministic SARMA/SARIMA already contains a non-seasonal "
-                "ARMA/ARIMA background, so stacking another stochastic base "
-                "creates overlapping/non-identifiable dynamics.",
-            )
-
-        if stochastic == "arima" and seasonal == "single_seasonality":
-            return Rule(
-                EXCLUDE_REDUNDANT,
-                "ARIMA + single deterministic Fourier seasonality is already "
-                "represented by the project's deterministic SARIMA generator.",
-            )
+        seasonal = component_a if family_a == "seasonality" else component_b
 
         if seasonal in {"single_seasonality", "multiple_seasonality"}:
             return Rule(
                 ALLOW_VALIDATED,
-                "Deterministic Fourier seasonality can be added to the "
-                "stochastic background and both characteristics remain "
-                "detectable.",
+                "Deterministic Fourier seasonality can be added to the stochastic "
+                "background while preserving both characteristics.",
                 (ADDITIVE_FOURIER,),
             )
 
-    # ------------------------------------------------------------------
-    # Stochastic + Fractional
-    # ------------------------------------------------------------------
+        if seasonal in {"pure_sarma", "pure_sarima"}:
+            return Rule(
+                EXCLUDE_NON_IDENTIFIABLE,
+                "Pure SARMA/SARIMA already contains non-seasonal ARMA dynamics; "
+                "stacking an additional stochastic base creates overlapping "
+                "or non-identifiable dynamics.",
+            )
+
+        # ------------------------------------------------------------------
+        # Stochastic + Fractional
+        # ------------------------------------------------------------------
 
     if family_pair == {"stochastic", "fractional"}:
         return Rule(
@@ -470,43 +429,35 @@ def resolve_base_pair_rule(component_a: str, component_b: str) -> Rule:
             "so the fractional characteristic is not cleanly identifiable.",
         )
 
-    # ------------------------------------------------------------------
-    # Seasonality + Volatility
-    # ------------------------------------------------------------------
+        # ------------------------------------------------------------------
+        # Seasonality + Volatility
+        # ------------------------------------------------------------------
 
     if family_pair == {"seasonality", "volatility"}:
-        seasonal = (
-            component_a
-            if family_a == "seasonality"
-            else component_b
-        )
+        seasonal = component_a if family_a == "seasonality" else component_b
 
         if seasonal in {"single_seasonality", "multiple_seasonality"}:
             return Rule(
                 ALLOW_VALIDATED,
                 "The volatility realization can be used as the background and "
-                "deterministic Fourier seasonality can be added on top.",
-                (ADDITIVE_FOURIER,),
+                "deterministic Fourier seasonality can be added on top.",                    (ADDITIVE_FOURIER,),
             )
 
-        return Rule(
-            ALLOW_VALIDATED,
-            "For deterministic SARMA/SARIMA, volatility innovations drive the "
-            "internal ARMA/ARIMA core while deterministic Fourier seasonality "
-            "remains the seasonal component.",
-            (VOLATILITY_AS_INNOVATIONS,),
-        )
+        if seasonal in {"pure_sarma", "pure_sarima"}:
+            return Rule(
+                ALLOW_VALIDATED,
+                "Volatility innovations can drive the stochastic seasonal "
+                "SARMA/SARIMA process. Joint component preservation must be "
+                "validated statistically.",
+                (VOLATILITY_AS_INNOVATIONS,),
+   )
 
     # ------------------------------------------------------------------
     # Seasonality + Fractional
     # ------------------------------------------------------------------
 
     if family_pair == {"seasonality", "fractional"}:
-        seasonal = (
-            component_a
-            if family_a == "seasonality"
-            else component_b
-        )
+        seasonal = component_a if family_a == "seasonality" else component_b
 
         if seasonal in {"single_seasonality", "multiple_seasonality"}:
             return Rule(
@@ -516,19 +467,19 @@ def resolve_base_pair_rule(component_a: str, component_b: str) -> Rule:
                 (ADDITIVE_FOURIER,),
             )
 
-        if seasonal == "sarma":
+        if seasonal == "pure_sarma":
             return Rule(
                 EXCLUDE_REDUNDANT,
-                "Deterministic SARMA contains an ARMA background that overlaps "
+                "Pure SARMA contains a non-seasonal ARMA structure that overlaps "
                 "with ARFIMA's own short-memory ARMA structure.",
             )
 
-        if seasonal == "sarima":
+        if seasonal == "pure_sarima":
             return Rule(
                 EXCLUDE_DOMINATED,
-                "Deterministic SARIMA contains integer-integrated ARIMA "
-                "background dynamics that dominate stationary fractional "
-                "long memory.",
+                "Pure SARIMA contains seasonal integration and non-seasonal ARMA "
+                "dynamics that do not provide a cleanly identifiable composition "
+                "with stationary fractional long memory.",
             )
 
     # ------------------------------------------------------------------
@@ -957,6 +908,16 @@ def validate_requested_combination(
                     dependency_errors.append(
                         "contextual_anomaly requires an existing seasonal "
                         "base component."
+                    )
+
+                elif feature == "contextual_anomaly" and any(
+                    component in {"pure_sarma", "pure_sarima"}
+                    for component in known_bases
+                ):
+                    dependency_errors.append(
+                        "contextual_anomaly currently requires deterministic Fourier "
+                        "seasonality and is therefore not supported with pure_sarma "
+                        "or pure_sarima."
                     )
 
             elif requirement in OVERLAY_FEATURES:

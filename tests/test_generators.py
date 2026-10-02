@@ -46,7 +46,7 @@ def test_stochastic(base):
 
 
 # ── Seasonal ─────────────────────────────────────────────────────────────────
-@pytest.mark.parametrize("base", ["sarma", "sarima", "single_seasonality", "multiple_seasonality"])
+@pytest.mark.parametrize("base",["single_seasonality","multiple_seasonality","pure_sarma","pure_sarima",],)
 def test_seasonal(base):
     _check(_gen(base), base)
 
