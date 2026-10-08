@@ -31,7 +31,7 @@ from importlib.metadata import version, PackageNotFoundError
 try:
     __version__ = version("betise")
 except PackageNotFoundError:  # running from source without install
-    __version__ = "0.5.0"
+    __version__ = "0.6.0"
 
 __author__ = "Pınar Cemre Yazıcı, Pelin Erkaya, Yağmur Türkmen, İsmail Güzel"
 __license__ = "MIT"

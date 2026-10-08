@@ -100,7 +100,7 @@ python -m twine upload dist/betise-X.Y.Z-py3-none-any.whl dist/betise-X.Y.Z.tar.
 - A published version can never be replaced, so validate first: tests, `twine check`, and an
   install of the built wheel into a clean venv. **Ask before uploading.**
 - Pre-1.0 versioning in use: breaking behaviour change → minor bump (0.3.0 → 0.4.0).
-- Published so far: 0.2.0, 0.2.1, 0.2.2, 0.2.3, 0.3.0, 0.4.0, 0.5.0.
+- Published so far: 0.2.0, 0.2.1, 0.2.2, 0.2.3, 0.3.0, 0.4.0, 0.5.0, 0.6.0.
 
 ## Conventions
 
