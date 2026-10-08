@@ -484,34 +484,60 @@ df, ctx = generate_dataframe(cfg)
 # Core columns
 df[["series_id", "time", "data", "label"]].head()
 
-# Metadata columns
-df[["is_stationary", "primary_category", "sub_category",
-    "base_series", "order", "base_coefs",
-    "difference", "drift_value",
+# What the series is made of
+df[["is_stationary", "base_components", "base_families",
+    "feature_components", "feature_families", "composition_steps"]].head()
+
+# Per-component detail
+df[["ar_order", "ma_order", "difference", "drift_value",
     "trend_type", "trend_slope",
     "anomaly_type", "anomaly_indices",
     "break_type", "break_indices"]].head()
 ```
+
+### Identifying a series
+
+A series can combine several bases (`ar + garch`) and several overlay features, so its
+identity is described by **lists** rather than single scalars:
+
+| Column | Description |
+|--------|-------------|
+| `base_components` | Bases used, e.g. `["arima"]` or `["ar", "garch"]` |
+| `base_families` | Family of each base: `stationary` / `stochastic` / `seasonal` / `volatility` / `fractional` |
+| `feature_components` | Overlay features applied, e.g. `["linear_trend", "point_anomaly"]` |
+| `feature_families` | Family of each feature: `trend` / `anomaly` / `structural_break` |
+| `composition_steps` | `standalone` / `pair` / `triple` — how many bases were composed |
+| `label` | Flat type label, e.g. `arima__linear_trend:upward__point_anomaly:single` |
+
+> **Changed in 0.6.0.** The scalar columns `base_series`, `primary_category`,
+> `sub_category`, `primary_label`, `sub_label`, `base_process_type` and `feature_infos`
+> were removed; the list columns above replace them, because a single scalar cannot
+> describe a multi-base composition. Migrating:
+> `df["base_series"] == "ar"` → `df["base_components"] == '["ar"]'`, and
+> `df["primary_category"] == "trend"` → `df["feature_families"].str.contains("trend")`.
+
+### Core and detail columns
 
 | Column | Description |
 |--------|-------------|
 | `series_id` | Series identifier |
 | `time` | Time index (0, 1, 2, …) |
 | `data` | Series value |
-| `label` | Type label (e.g. `ar`, `arima__linear_trend:upward__point_anomaly:single`) |
+| `length` | Series length |
 | `is_stationary` | 1 = stationary, 0 = non-stationary |
-| `primary_category` | `stationary` / `stochastic` / `trend` / `seasonality` / `volatility` / `anomaly` / `structural_break` |
-| `sub_category` | Sub-type (e.g. `ar`, `arima`, `linear_trend`) |
+| `ar_order` / `ma_order` | AR order p / MA order q |
+| `ar_coefs` / `ma_coefs` | Fitted coefficients (list) |
 | `difference` | Integration order d (stochastic series) |
 | `drift_value` | Drift coefficient (`random_walk_drift` only) |
 | `seasonal_ar_order` | Seasonal AR order P (SARMA/SARIMA) |
 | `seasonal_ma_order` | Seasonal MA order Q (SARMA/SARIMA) |
 | `seasonal_difference` | Seasonal differencing order D (SARMA/SARIMA) |
-| `arima_ar_order` | ARIMA component AR order (ARIMA-GARCH only) |
-| `arima_ma_order` | ARIMA component MA order (ARIMA-GARCH only) |
-| `arima_diff` | ARIMA component differencing order (ARIMA-GARCH only) |
-| `anomaly_indices` | Anomaly positions (list) |
-| `break_indices` | Break point positions (list) |
+| `trend_type` / `trend_slope` | Trend shape and slope |
+| `anomaly_type` | Anomaly features applied (list) |
+| `anomaly_count` | Count per anomaly feature, e.g. `{"point_anomaly": 1}` |
+| `anomaly_indices` | Positions per anomaly feature, e.g. `{"point_anomaly": [82]}` |
+| `break_type` / `break_indices` | Structural break type and positions |
+| `<feature>_indices` | Per-point location label — `1` inside the event, `0` elsewhere (`point_anomaly_indices`, `mean_shift_indices`, …) |
 
 ### Reading from parquet
 
@@ -521,8 +547,8 @@ import pandas as pd
 df = pd.read_parquet("output/mixed_combinations.parquet")
 
 # Filter by type
-ar_series     = df[df["base_series"] == "ar"]
-trend_series  = df[df["primary_category"] == "trend"]
+ar_series     = df[df["base_components"].str.contains("ar")]
+trend_series  = df[df["feature_families"].str.contains("trend")]
 nonstationary = df[df["is_stationary"] == 0]
 
 # Extract a single series

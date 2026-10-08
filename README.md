@@ -73,7 +73,13 @@ A large-scale benchmark dataset (120,000 series, 23.8 GB) generated with BeTiSe 
 Full usage guide, config reference, and ready-to-run examples are on GitHub:  
 **[github.com/ismailguzel/betise](https://github.com/ismailguzel/betise)**
 
-The paper appendix (metadata schema, generation templates, LLM prompts, and example figures) is available in [APPENDIX.md](APPENDIX.md).
+| Document | Contents |
+|----------|----------|
+| [USAGE.md](USAGE.md) | Base series, feature overlays, output format, and the canonical catalog |
+| [docs/REQUESTED_GENERATION_QUICKREF.md](docs/REQUESTED_GENERATION_QUICKREF.md) | Generating N series from one exact combination — short reference |
+| [docs/REQUESTED_GENERATION_GUIDE.md](docs/REQUESTED_GENERATION_GUIDE.md) | The same workflow in full detail |
+| [docs/combination-rules/](docs/combination-rules/) | Which base/feature combinations are valid, per base family |
+| [APPENDIX.md](APPENDIX.md) | Paper appendix — metadata schema, generation templates, LLM prompts, example figures |
 
 ## Citation
 
