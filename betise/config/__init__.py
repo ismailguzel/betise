@@ -42,6 +42,31 @@ def _deep_merge(
     return result
 
 
+def load_params_config(
+    config_dir: Optional[str] = None,
+    *,
+    params: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Load only the numerical BeTiSe parameter configuration."""
+
+    base_dir = (
+        Path(config_dir)
+        if config_dir
+        else Path(__file__).resolve().parent
+    )
+
+    cfg_params = _load_json_config(
+        base_dir / "params.json"
+    )
+
+    if params is not None:
+        cfg_params = _deep_merge(
+            cfg_params,
+            params,
+        )
+
+    return cfg_params
+
 def load_config(
     config_dir: Optional[str] = None,
     *,

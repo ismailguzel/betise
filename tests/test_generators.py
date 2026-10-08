@@ -7,6 +7,7 @@ Each test verifies that:
 """
 import numpy as np
 import pytest
+import json
 
 from betise import generate_dataframe, load_config
 
@@ -27,10 +28,25 @@ def _gen(base: str):
 
 
 def _check(df, base: str):
-    assert len(df) == LENGTH, f"{base}: expected {LENGTH} rows, got {len(df)}"
-    assert df["data"].notna().all(), f"{base}: contains NaN"
-    assert np.isfinite(df["data"].values).all(), f"{base}: contains Inf"
-    assert (df["base_series"] == base).all(), f"{base}: wrong base_series column"
+    assert len(df) == LENGTH, (
+        f"{base}: expected {LENGTH} rows, got {len(df)}"
+    )
+
+    assert df["data"].notna().all(), (
+        f"{base}: contains NaN"
+    )
+
+    assert np.isfinite(df["data"].values).all(), (
+        f"{base}: contains Inf"
+    )
+
+    base_components = json.loads(
+        df["base_components"].iloc[0]
+    )
+
+    assert base_components == [base], (
+        f"{base}: wrong base_components metadata"
+    )
 
 
 # ── Stationary ────────────────────────────────────────────────────────────────
@@ -46,7 +62,7 @@ def test_stochastic(base):
 
 
 # ── Seasonal ─────────────────────────────────────────────────────────────────
-@pytest.mark.parametrize("base", ["sarma", "sarima", "single_seasonality", "multiple_seasonality"])
+@pytest.mark.parametrize("base",["single_seasonality","multiple_seasonality","sarma","sarima",],)
 def test_seasonal(base):
     _check(_gen(base), base)
 

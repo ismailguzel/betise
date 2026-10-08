@@ -1,0 +1,12 @@
+{
+  "mode": "requested",
+  "output_dir": "generated-dataset/check_mean_short",
+  "base_components": ["ar"],
+  "features": ["mean_shift"],
+  "num_series": 6,
+  "categorical_mode": "all",
+  "variants_per_type": 3,
+  "length_category": "short",
+  "seed": 42,
+  "shard_size": 3
+}

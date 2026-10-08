@@ -9,6 +9,7 @@ import json
 import numpy as np
 import pandas as pd
 
+
 def create_metadata_record(
 
     # === CORE ===
@@ -17,24 +18,13 @@ def create_metadata_record(
     label,
     is_stationary=1,
 
-    # === HIERARCHY ===
-    primary_category=None,
-    primary_label=None,
-    sub_category=None,
-    sub_label=None,
-
-    # === BASE PROCESS ===
-    base_series=None,
-    base_process_type=None,
-
-    # Multiple base-family composition
+    # === COMBINATION ===
     base_components=None,
     base_families=None,
     composition_steps=None,
 
     feature_components=None,
     feature_families=None,
-    feature_infos=None,
 
     # === AR / MA STRUCTURE ===
     ar_order=None,
@@ -113,7 +103,7 @@ def create_metadata_record(
     break_directions=None,
     trend_shift_change_types=None,
 
-    # === LOCATION ===
+    # === LOCATION PARAMETERS ===
     location_point=None,
     location_collective=None,
     location_mean_shift=None,
@@ -128,8 +118,7 @@ def create_metadata_record(
 ):
 
     """
-    Create a standardized, non-redundant hierarchical metadata record
-    for a generated time series.
+    Create a standardized metadata record for one generated time series.
     """
 
     record = {
@@ -140,23 +129,13 @@ def create_metadata_record(
         "label": label,
         "is_stationary": is_stationary,
 
-        # === Hierarchy ===
-        "primary_category": primary_category,
-        "primary_label": primary_label,
-        "sub_category": sub_category,
-        "sub_label": sub_label,
-
-        # === Base Process ===
-        "base_series": base_series,
-        "base_process_type": base_process_type,
-
+        # === Combination ===
         "base_components": base_components,
         "base_families": base_families,
         "composition_steps": composition_steps,
 
         "feature_components": feature_components,
         "feature_families": feature_families,
-        "feature_infos": feature_infos,
 
         # === AR / MA Structure ===
         "ar_order": ar_order,
@@ -201,8 +180,10 @@ def create_metadata_record(
 
         "seasonality_scale_factor": seasonality_scale_factor,
         "seasonality_strength": seasonality_strength,
-        "seasonality_period_balance_factors": seasonality_period_balance_factors,
-        "seasonality_calibration_difference_order": seasonality_calibration_difference_order,
+        "seasonality_period_balance_factors":
+            seasonality_period_balance_factors,
+        "seasonality_calibration_difference_order":
+            seasonality_calibration_difference_order,
 
         # === Volatility ===
         "volatility_type": volatility_type,
@@ -222,10 +203,10 @@ def create_metadata_record(
 
         # === Anomaly ===
         "anomaly_type": anomaly_type,
+        "anomaly_shapes": anomaly_shapes,
         "anomaly_count": anomaly_count,
         "anomaly_indices": anomaly_indices,
         "anomaly_magnitudes": anomaly_magnitudes,
-        "anomaly_shapes": anomaly_shapes,
 
         # === Break ===
         "break_type": break_type,
@@ -235,7 +216,7 @@ def create_metadata_record(
         "break_directions": break_directions,
         "trend_shift_change_types": trend_shift_change_types,
 
-        # === Location ===
+        # === Location Parameters ===
         "location_point": location_point,
         "location_collective": location_collective,
         "location_mean_shift": location_mean_shift,
@@ -260,27 +241,44 @@ def make_json_serializable(obj):
     if obj is None:
         return None
 
-    if isinstance(obj, (np.integer, np.int_, np.int64, np.int32)):
+    if isinstance(
+        obj,
+        (np.integer, np.int_, np.int64, np.int32),
+    ):
         return int(obj)
 
-    if isinstance(obj, (np.floating, np.float64, np.float32)):
+    if isinstance(
+        obj,
+        (np.floating, np.float64, np.float32),
+    ):
         return float(obj)
 
     if isinstance(obj, (np.bool_, bool)):
         return bool(obj)
 
     if isinstance(obj, np.ndarray):
-        return [make_json_serializable(x) for x in obj.tolist()]
+        return [
+            make_json_serializable(x)
+            for x in obj.tolist()
+        ]
 
     if isinstance(obj, (list, tuple)):
-        return [make_json_serializable(x) for x in obj]
+        return [
+            make_json_serializable(x)
+            for x in obj
+        ]
 
     if isinstance(obj, set):
-        return [make_json_serializable(x) for x in sorted(obj)]
+        return [
+            make_json_serializable(x)
+            for x in sorted(obj)
+        ]
 
     if isinstance(obj, dict):
         return {
-            str(make_json_serializable(k)): make_json_serializable(v)
+            str(
+                make_json_serializable(k)
+            ): make_json_serializable(v)
             for k, v in obj.items()
         }
 
@@ -295,15 +293,23 @@ def metadata_value_to_cell(value):
     Lists/dicts become JSON strings.
     """
 
-    value = make_json_serializable(value)
+    value = make_json_serializable(
+        value
+    )
 
     if value is None:
         return None
 
-    if isinstance(value, (int, float, str, bool)):
+    if isinstance(
+        value,
+        (int, float, str, bool),
+    ):
         return value
 
-    return json.dumps(value, ensure_ascii=False)
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+    )
 
 
 def get_metadata_columns_defaults():
@@ -315,50 +321,92 @@ def get_metadata_columns_defaults():
         series_id=0,
         length=0,
         label="",
-        is_stationary=0
+        is_stationary=0,
     )
 
-    return list(dummy.keys()), dummy
+    return list(
+        dummy.keys()
+    ), dummy
 
 
-def attach_metadata_columns_to_df(df, metadata_record):
+def attach_metadata_columns_to_df(
+    df,
+    metadata_record,
+):
     """
-    Attach metadata columns to a generated time series dataframe.
+    Attach metadata and timestep-level localization labels
+    to a generated time-series dataframe.
     """
 
     df = df.copy()
 
-    metadata_cols, default_record = get_metadata_columns_defaults()
+    metadata_cols, default_record = (
+        get_metadata_columns_defaults()
+    )
 
     for col in metadata_cols:
-        val = metadata_record.get(col, default_record[col])
-        df[col] = metadata_value_to_cell(val)
+        val = metadata_record.get(
+            col,
+            default_record[col],
+        )
 
-    df["label"] = metadata_record["label"]
+        df[col] = (
+            metadata_value_to_cell(
+                val
+            )
+        )
 
-    core_cols = ["series_id", "time", "data"]
+    df["label"] = (
+        metadata_record["label"]
+    )
+
+    core_cols = [
+        "series_id",
+        "time",
+        "data",
+    ]
 
     optional_series_cols = [
-        "seasonal_diff"
+        "seasonal_diff",
+
+        # Localization labels
+        "point_anom_label",
+        "collect_anom_label",
+        "context_anom_label",
+        "mean_shift_label",
+        "variance_shift_label",
+        "trend_shift_label",
     ]
 
     meta_cols = [
-        col for col in metadata_cols
-        if col not in core_cols + ["label"] and col in df.columns
+        col
+        for col in metadata_cols
+        if (
+            col
+            not in core_cols + ["label"]
+            and col in df.columns
+        )
     ]
 
     final_cols_order = (
         core_cols
-        + [col for col in optional_series_cols if col in df.columns]
+        + [
+            col
+            for col in optional_series_cols
+            if col in df.columns
+        ]
         + meta_cols
         + ["label"]
     )
 
     final_cols_in_df = [
-        col for col in final_cols_order
+        col
+        for col in final_cols_order
         if col in df.columns
     ]
 
-    df = df[final_cols_in_df]
+    df = df[
+        final_cols_in_df
+    ]
 
     return df

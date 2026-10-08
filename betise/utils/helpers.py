@@ -196,76 +196,31 @@ def unpack_interval_indices(val):
 
 def add_indices_column(df):
     """
-    Add the indices of the anomalies and structural breaks in the DataFrame.
-    
-    The function can be used both in generation step and after loading the data from parquet files. 
-    
-    It checks the primary and sub labels to determine which type of anomaly or break is present and then parses the corresponding indices to mark them in new columns.
-    
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Input DataFrame
+    Add legacy *_indices columns from canonical localization labels.
 
-    Returns
-    -------
-    df: pd.DataFrame
-        DataFrame with an additional 'indices' column containing indices of the break/anomaly points
-
+    Localization labels are the source of truth.
+    If a feature is not present, its indices column remains zero.
     """
+
     df = df.copy()
-    df.loc[:, 'point_anomaly_indices'] = 0
-    df.loc[:, 'collective_anomaly_indices'] = 0
-    df.loc[:, 'contextual_anomaly_indices'] = 0
-    df.loc[:, 'mean_shift_indices'] = 0
-    df.loc[:, 'var_shift_indices'] = 0
-    df.loc[:, 'trend_shift_indices'] = 0
-    if df['primary_label'].iloc[0] == 1 and df['sub_label'].iloc[0] == 0:
-        point_anomaly_indices = df['anomaly_indices'][0]
-        point_anomaly_indices = parse_indices(point_anomaly_indices)
-        for point_anomaly_index in point_anomaly_indices:
-            df.loc[point_anomaly_index, 'point_anomaly_indices'] = 1
-    elif df['primary_label'].iloc[0] == 1 and df['sub_label'].iloc[0] == 1:
-        collective_anomaly_indices = df['anomaly_indices'][0]
-        starts, ends = unpack_interval_indices(collective_anomaly_indices)
 
-        for s, e in zip(starts, ends):
-            s = max(0, int(s))
-            e = min(len(df) - 1, int(e))
-            if s > e:
-                s, e = e, s
-            df.iloc[s:e+1, df.columns.get_loc("collective_anomaly_indices")] = 1
+    label_to_indices = {
+        "point_anom_label": "point_anomaly_indices",
+        "collect_anom_label": "collective_anomaly_indices",
+        "context_anom_label": "contextual_anomaly_indices",
+        "mean_shift_label": "mean_shift_indices",
+        "variance_shift_label": "var_shift_indices",
+        "trend_shift_label": "trend_shift_indices",
+    }
 
-    elif df['primary_label'].iloc[0] == 1 and df['sub_label'].iloc[0] == 2:
-        contextual_anomaly_indices = df['anomaly_indices'][0]
-        starts, ends = unpack_interval_indices(contextual_anomaly_indices)
+    for label_col, indices_col in label_to_indices.items():
 
-        for s, e in zip(starts, ends):
-            s = max(0, int(s))
-            e = min(len(df) - 1, int(e))
-            if s > e:
-                s, e = e, s
-            df.iloc[s:e+1, df.columns.get_loc("contextual_anomaly_indices")] = 1
-    elif df['primary_label'].iloc[0] == 6 and df['sub_label'].iloc[0] == 0:
-        mean_shift_indices = df['break_indices'][0]
-        mean_shift_indices = parse_indices(mean_shift_indices)
-        for idx, break_point in enumerate(mean_shift_indices, start=1):
-            df.iloc[break_point:, df.columns.get_loc('mean_shift_indices')] = idx
-    elif df['primary_label'].iloc[0] == 6 and df['sub_label'].iloc[0] == 1:
-        var_shift_indices = df['break_indices'][0]
-        var_shift_indices = parse_indices(var_shift_indices)
-        for idx, break_point in enumerate(var_shift_indices, start=1):
-            df.iloc[break_point:, df.columns.get_loc('var_shift_indices')] = idx
-    elif df['primary_label'].iloc[0] == 6 and df['sub_label'].iloc[0] == 2:
-        trend_shift_indices = df['break_indices'][0]
-        trend_shift_indices = parse_indices(trend_shift_indices)
-        for idx, break_point in enumerate(trend_shift_indices, start=1):
-            df.iloc[break_point:, df.columns.get_loc('trend_shift_indices')] = idx
-    else:
-        pass
+        if label_col in df.columns:
+            df[indices_col] = df[label_col]
+        else:
+            df[indices_col] = 0
 
     return df
-
 
 def get_length_label(length_range):
     """

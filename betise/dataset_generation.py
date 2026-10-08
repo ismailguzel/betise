@@ -135,7 +135,7 @@ def _validate_current_pipeline_support(base_components: List[str]) -> None:
 
     - one standalone base component
     - root base + one volatility mechanism, when volatility is used as
-      innovations (AR/MA/ARMA, stochastic, deterministic SARMA/SARIMA, ARFIMA)
+      innovations (AR/MA/ARMA, stochastic, SARMA/SARIMA, ARFIMA)
 
     Additive multi-base Fourier compositions will be wired in the later
     multi-base orchestrator.
@@ -377,56 +377,35 @@ def generate_base_series(
 
 
     if base_series == "sarma":
-
-        p = seasonality_cfg.get(
-            "sarma",
-            {}
-        )
-
-        period = p.get("period")
-
-        if isinstance(period, list):
-            valid_periods = ts.get_valid_calendar_periods(
-                allowed_periods=period
-            )
-
-            period = (
-                int(random.choice(valid_periods))
-                if valid_periods
-                else None
-            )
-
-        amplitude = (
-            _sample_value(p["amplitude"])
-            if "amplitude" in p
-            else None
-        )
-
-        return ts.generate_deterministic_sarma(
-            period=period,
-            amplitude=amplitude,
-            innovations=innovations
-        )
-
-
-    if base_series == "sarima":
-
-        p = seasonality_cfg.get("sarima",{})
+        p = seasonality_cfg.get("sarma", {})
         period = p.get("period")
 
         if isinstance(period, list):
             valid_periods = ts.get_valid_calendar_periods(allowed_periods=period)
-            period = (int(random.choice(valid_periods)) if valid_periods else None)
+            period = int(random.choice(valid_periods)) if valid_periods else None
 
-        amplitude = (_sample_value(p["amplitude"]) if "amplitude" in p else None)
-
-        d = int(_sample_value(p.get("diff", 1)))
-
-        return ts.generate_deterministic_sarima(
+        return ts.generate_sarma_seasonality(
             period=period,
-            amplitude=amplitude,
+            innovations=innovations
+        )
+
+    if base_series == "sarima":
+        p = seasonality_cfg.get("sarima", {})
+        period = p.get("period")
+
+        if isinstance(period, list):
+            valid_periods = ts.get_valid_calendar_periods(allowed_periods=period)
+            period = int(random.choice(valid_periods)) if valid_periods else None
+
+        d = int(_sample_value(p.get("diff", 0)))
+        D = int(_sample_value(p.get("seasonal_diff", 1)))
+
+        return ts.generate_sarima_seasonality(
+            period=period,
             d=d,
-            innovations=innovations)
+            D=D,
+            innovations=innovations
+        )
     
     # Volatility base: arch, garch, egarch, aparch
     if base_series in VOLATILITY_BASE_SERIES:
@@ -582,7 +561,7 @@ def apply_feature(
         if mode == "multiple":
             return ts.generate_point_anomalies(df, scale_factor=scale_factor)
         location = feature_cfg.get("location", "middle")
-        return ts.generate_point_anomaly(df, location=location, scale_factor=scale_factor)
+        return ts.generate_point_anomaly(df, location=location, scale_factor=scale_factor, is_spike= is_spike)
 
     if feature_name == "collective_anomaly":
         p            = params_cfg.get("anomalies", {}).get("collective_anomaly", {})
@@ -609,7 +588,7 @@ def apply_feature(
         if seasonal_info is None:
             raise ValueError(
                 "contextual_anomaly requires a seasonal base series or seasonal feature. "
-                "Please use base_series='single_seasonality', 'multiple_seasonality', 'sarma', or 'sarima', "
+                "Please use base_series='single_seasonality' or 'multiple_seasonality' "
                 "or enable a seasonality feature first."
             )
     
@@ -734,15 +713,49 @@ def populate_family_metadata(
 
     return meta
 
-def _set_primary(
+
+def _append_metadata_list(
     meta: Dict[str, Any],
-    category: str, label: int,
-    sub_category: str, sub_label: int,
+    key: str,
+    value: Any,
 ) -> None:
-    meta["primary_category"] = category
-    meta["primary_label"]    = label
-    meta["sub_category"]     = sub_category
-    meta["sub_label"]        = sub_label
+    """
+    Append one value to a list-valued metadata field
+    without creating duplicates.
+    """
+
+    current = meta.get(key)
+
+    if current is None:
+        current = []
+
+    elif not isinstance(current, list):
+        current = [current]
+
+    if value not in current:
+        current.append(value)
+
+    meta[key] = current
+
+
+def _set_metadata_dict(
+    meta: Dict[str, Any],
+    key: str,
+    component: str,
+    value: Any,
+) -> None:
+    """
+    Store component-specific metadata under one flat
+    family-level metadata field.
+    """
+
+    current = meta.get(key)
+
+    if not isinstance(current, dict):
+        current = {}
+
+    current[component] = value
+    meta[key] = current
 
 
 def update_metadata(
@@ -752,73 +765,178 @@ def update_metadata(
     feature_cfg: Dict[str, Any],
 ) -> Dict[str, Any]:
 
+    # ---------------------------------------------------------
+    # Volatility
+    # ---------------------------------------------------------
+
     if feature_name in VOLATILITY_FEATURES:
-        _set_primary(meta, "volatility", 5, feature_name, 0)
-        meta["volatility_type"]  = feature_name
+        meta["volatility_type"] = feature_name
         meta["volatility_alpha"] = info.get("alpha")
-        meta["volatility_beta"]  = info.get("beta")
+        meta["volatility_beta"] = info.get("beta")
         meta["volatility_omega"] = info.get("omega")
         meta["volatility_theta"] = info.get("theta")
         meta["volatility_lambda"] = info.get("lambda")
         meta["volatility_gamma"] = info.get("gamma")
         meta["volatility_delta"] = info.get("delta")
-        meta["is_stationary"]    = 0
+        meta["is_stationary"] = 0
+
         return meta
 
+    # ---------------------------------------------------------
+    # Trend
+    # ---------------------------------------------------------
 
     if feature_name in TREND_FEATURES:
-        sub_map = {
-            "linear_trend":      0,
-            "quadratic_trend":   1,
-            "cubic_trend":       2,
-            "exponential_trend": 3,
-            "damped_trend": 4,
-        }
-        _set_primary(meta, "trend", 2, feature_name, sub_map.get(feature_name, 0))
-        meta["is_stationary"]   = 0
-        meta["trend_type"]      = feature_name
-        meta["trend_slope"]     = info.get("slope")
+        meta["is_stationary"] = 0
+
+        meta["trend_type"] = feature_name
+        meta["trend_slope"] = info.get("slope")
         meta["trend_intercept"] = info.get("intercept")
-        meta["trend_coef_a"]    = info.get("a")
-        meta["trend_coef_b"]    = info.get("b")
-        meta["trend_coef_c"]    = info.get("c")
-        meta["trend_damping_rate"] = info.get("damping_rate")
+        meta["trend_coef_a"] = info.get("a")
+        meta["trend_coef_b"] = info.get("b")
+        meta["trend_coef_c"] = info.get("c")
+        meta["trend_damping_rate"] = info.get(
+            "damping_rate"
+        )
+
         return meta
+
+    # ---------------------------------------------------------
+    # Structural breaks
+    # ---------------------------------------------------------
 
     if feature_name in BREAK_FEATURES:
-        sub_map = {"mean_shift": 0, "variance_shift": 1, "trend_shift": 2}
-        _set_primary(meta, "structural_break", 6, feature_name, sub_map.get(feature_name, 0))
         meta["is_stationary"] = 0
-        meta["break_type"]    = info.get("subtype", feature_name)
-        meta["break_count"]   = info.get("num_breaks")
-        indices = info.get("shift_indices") or info.get("starts")
-        if indices is not None: meta["break_indices"] = indices
-        if "shift_magnitudes" in info: meta["break_magnitudes"]         = info.get("shift_magnitudes")
-        if "shift_types"      in info: meta["trend_shift_change_types"] = info.get("shift_types")
-        loc = feature_cfg.get("location")
-        if   feature_name == "mean_shift":     meta["location_mean_shift"]     = loc
-        elif feature_name == "variance_shift": meta["location_variance_shift"] = loc
-        else:                                  meta["location_trend_shift"]    = loc
+
+        _append_metadata_list(
+            meta,
+            "break_type",
+            feature_name,
+        )
+
+        _set_metadata_dict(
+            meta,
+            "break_count",
+            feature_name,
+            info.get("num_breaks"),
+        )
+
+        _set_metadata_dict(
+            meta,
+            "break_indices",
+            feature_name,
+            info.get("shift_indices"),
+        )
+
+        if info.get("shift_magnitudes") is not None:
+            _set_metadata_dict(
+                meta,
+                "break_magnitudes",
+                feature_name,
+                info.get("shift_magnitudes"),
+            )
+
+        if info.get("shift_types") is not None:
+            _set_metadata_dict(
+                meta,
+                "trend_shift_change_types",
+                feature_name,
+                info.get("shift_types"),
+            )
+
+        loc = info.get(
+            "location",
+            feature_cfg.get("location"),
+        )
+
+        if feature_name == "mean_shift":
+            meta["location_mean_shift"] = loc
+
+        elif feature_name == "variance_shift":
+            meta["location_variance_shift"] = loc
+
+        elif feature_name == "trend_shift":
+            meta["location_trend_shift"] = loc
+
         return meta
 
+    # ---------------------------------------------------------
+    # Anomalies
+    # ---------------------------------------------------------
+
     if feature_name in ANOMALY_FEATURES:
-        sub_map = {"point_anomaly": 0, "collective_anomaly": 1, "contextual_anomaly": 2}
-        _set_primary(meta, "anomaly", 1, feature_name, sub_map.get(feature_name, 0))
         meta["is_stationary"] = 0
-        meta["anomaly_type"]  = info.get("subtype", feature_name)
-        meta["anomaly_count"] = info.get("num_anomalies", 1)
-        if "anomaly_indices" in info:
-            meta["anomaly_indices"] = info.get("anomaly_indices")
-        if "starts" in info and "ends" in info:
-            meta["anomaly_indices"] = [info.get("starts"), info.get("ends")]
-        loc = info.get("location", feature_cfg.get("location"))
-        if   feature_name == "point_anomaly":      meta["location_point"]      = loc
-        elif feature_name == "collective_anomaly": meta["location_collective"] = loc
-        else:                                      meta["location_contextual"] = loc
+
+        _append_metadata_list(
+            meta,
+            "anomaly_type",
+            feature_name,
+        )
+
+        _set_metadata_dict(
+            meta,
+            "anomaly_count",
+            feature_name,
+            info.get("num_anomalies", 1),
+        )
+
+        if info.get("anomaly_indices") is not None:
+            anomaly_indices = info.get(
+                "anomaly_indices"
+            )
+
+        elif (
+            info.get("starts") is not None
+            and info.get("ends") is not None
+        ):
+            anomaly_indices = {
+                "starts": info.get("starts"),
+                "ends": info.get("ends"),
+            }
+
+        else:
+            anomaly_indices = None
+
+        _set_metadata_dict(
+            meta,
+            "anomaly_indices",
+            feature_name,
+            anomaly_indices,
+        )
+
+        if info.get("anomaly_shapes") is not None:
+            _set_metadata_dict(
+                meta,
+                "anomaly_shapes",
+                feature_name,
+                info.get("anomaly_shapes"),
+            )
+
+        if info.get("magnitudes") is not None:
+            _set_metadata_dict(
+                meta,
+                "anomaly_magnitudes",
+                feature_name,
+                info.get("magnitudes"),
+            )
+
+        loc = info.get(
+            "location",
+            feature_cfg.get("location"),
+        )
+
+        if feature_name == "point_anomaly":
+            meta["location_point"] = loc
+
+        elif feature_name == "collective_anomaly":
+            meta["location_collective"] = loc
+
+        elif feature_name == "contextual_anomaly":
+            meta["location_contextual"] = loc
+
         return meta
 
     return meta
-
 
 # ── Label builder ─────────────────────────────────────────────────────────────
 
@@ -909,7 +1027,6 @@ def generate_dataframe(cfg: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Any
                     arfima_params.get("numseas", 100)
                 )
             )
-        feature_records = []
 
         # ---------------------------------------------------------
         # Prepare volatility innovations BEFORE base generation
@@ -1014,32 +1131,31 @@ def generate_dataframe(cfg: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Any
 
         base_coefs, base_order = _base_metadata(base_series, base_info)
 
-        # ── Determine initial primary category from base type ─────────────────
-        if base_series in SEASONAL_BASE_SERIES:
-            primary_category = "seasonality"
-            primary_label    = 4
-        elif base_series in VOLATILITY_BASE_SERIES:
-            primary_category = "volatility"
-            primary_label    = 5
-        elif base_series in STOCHASTIC_BASE_SERIES:
-            primary_category = "stochastic"
-            primary_label    = 3
-        else:
-            is_stat          = int(df["stationary"].iloc[0]) if "stationary" in df.columns else 1
-            primary_category = "stationary" if is_stat == 1 else "stochastic"
-            primary_label    = 0 if is_stat == 1 else 3
 
         meta: Dict[str, Any] = {
-            "is_stationary": int(df["stationary"].iloc[0]) if "stationary" in df.columns else 1,
-            "is_seasonal": int(df["seasonal"].iloc[0]) if "seasonal" in df.columns else 0,
-            "primary_category": primary_category,
-            "primary_label": primary_label,
-            "sub_category": base_series,
-            "sub_label": 0,
-            "base_series": base_series,
-            "base_components": list(rule_report.base_components),
-            "base_families": list(rule_report.base_families),
-            "composition_steps": list(rule_report.composition_steps),
+            "is_stationary": (
+                int(df["stationary"].iloc[0])
+                if "stationary" in df.columns
+                else 1
+            ),
+
+            "is_seasonal": (
+                int(df["seasonal"].iloc[0])
+                if "seasonal" in df.columns
+                else 0
+            ),
+
+            "base_components": list(
+                rule_report.base_components
+            ),
+
+            "base_families": list(
+                rule_report.base_families
+            ),
+
+            "composition_steps": list(
+                rule_report.composition_steps
+            ),
         }
 
         # Populate metadata for every base-family component.
@@ -1071,11 +1187,6 @@ def generate_dataframe(cfg: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Any
                 state
             )
 
-            feature_records.append({
-                "name": feature_name,
-                "family": _feature_family(feature_name),
-                "info": info,
-            })
 
             meta = update_metadata(
                 meta,
@@ -1084,9 +1195,8 @@ def generate_dataframe(cfg: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Any
                 feature_cfg_item
             )
 
-        meta["feature_components"] = [feature["name"] for feature in feature_records]
-        meta["feature_families"] = [feature["family"] for feature in feature_records]
-        meta["feature_infos"] = {feature["name"]: feature["info"] for feature in feature_records}
+        meta["feature_components"] = list(rule_report.feature_components)
+        meta["feature_families"] = list(rule_report.feature_families)
 
         # ── Final stationarity / seasonality flags from df columns ────────────
         meta["is_stationary"] = int(df["stationary"].iloc[0]) if "stationary" in df.columns else meta.get("is_stationary", 1)
@@ -1133,17 +1243,11 @@ def generate_dataframe(cfg: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Any
             length=length,
             label=label,
             is_stationary=meta.get("is_stationary", 1),
-            primary_category=meta.get("primary_category"),
-            primary_label=meta.get("primary_label"),
-            sub_category=meta.get("sub_category"),
-            sub_label=meta.get("sub_label"),
-            base_series=meta.get("base_series"),
             base_components=meta.get("base_components"),
             base_families=meta.get("base_families"),
             composition_steps=meta.get("composition_steps"),
             feature_components=meta.get("feature_components"),
             feature_families=meta.get("feature_families"),
-            feature_infos=meta.get("feature_infos"),
             ar_order=meta.get("ar_order"),
             ma_order=meta.get("ma_order"),
             ar_coefs=meta.get("ar_coefs"),
@@ -1191,10 +1295,13 @@ def generate_dataframe(cfg: Dict[str, Any]) -> Tuple[pd.DataFrame, Dict[str, Any
             anomaly_type=meta.get("anomaly_type"),
             anomaly_count=meta.get("anomaly_count"),
             anomaly_indices=meta.get("anomaly_indices"),
+            anomaly_shapes=meta.get("anomaly_shapes"),
+            anomaly_magnitudes=meta.get("anomaly_magnitudes"),
             break_type=meta.get("break_type"),
             break_count=meta.get("break_count"),
             break_indices=meta.get("break_indices"),
             break_magnitudes=meta.get("break_magnitudes"),
+            break_directions=meta.get("break_directions"),
             trend_shift_change_types=meta.get("trend_shift_change_types"),
             location_point=meta.get("location_point"),
             location_collective=meta.get("location_collective"),

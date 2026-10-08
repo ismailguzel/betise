@@ -31,11 +31,11 @@ Recommended location
 --------------------
 Save this file as:
 
-    examples/11_variant_aware_gallery.py
+    examples/10_variant_aware_gallery.py
 
 Run from repository root:
 
-    python examples/11_variant_aware_gallery.py
+    python examples/10_variant_aware_gallery.py --length medium
 
 Optional:
     python examples/11_variant_aware_gallery.py --length 400
@@ -68,6 +68,7 @@ from betise.full_dataset_generation import (
     generate_full_series,
 )
 
+from betise.run_scenario_generation import LENGTH_PRESETS
 
 
 # ============================================================================
@@ -298,7 +299,7 @@ def _flush_page(
 def _write_cover_page(
     pdf: PdfPages,
     total: int,
-    length: int,
+    length: str,
     config_name: str,
 ):
     fig, ax = plt.subplots(
@@ -366,8 +367,12 @@ def main():
 
     parser.add_argument(
         "--length",
-        type=int,
-        default=400,
+        choices=sorted(LENGTH_PRESETS),
+        default="medium",
+        help=(
+            "Series-length preset: "
+            "short, medium, or long."
+        ),
     )
 
     parser.add_argument(
@@ -397,6 +402,14 @@ def main():
     )
 
     args = parser.parse_args()
+
+    length_range = LENGTH_PRESETS[
+        args.length
+    ]
+
+    length_low, length_high = (
+        length_range
+    )
 
     config_dir = Path(
         args.config_dir
@@ -548,17 +561,25 @@ def main():
             error_message = ""
 
             try:
+                series_length = int(
+                    np.random.randint(
+                        length_low,
+                        length_high + 1,
+                    )
+                )
+
                 df = generate_full_series(
                     composition=concrete,
                     full_cfg=full_cfg,
                     params_cfg=params_cfg,
                     series_id=index,
-                    length=args.length,
+                    length=series_length,
                 )
 
-                if len(df) != args.length:
+                if len(df) != series_length:
                     raise AssertionError(
-                        f"Expected length {args.length}, got {len(df)}."
+                        f"Expected length {series_length}, "
+                        f"got {len(df)}."
                     )
 
                 if not np.isfinite(
@@ -626,6 +647,7 @@ def main():
                 "status": status,
                 "error_type": error_type,
                 "error_message": error_message,
+                "length": series_length,
             })
 
             if (

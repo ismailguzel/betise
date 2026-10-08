@@ -106,7 +106,7 @@ MULTIPLE_CASES = [
 
 SEASONAL_CASES = SINGLE_CASES + MULTIPLE_CASES
 
-OUTPUT_DIR = Path("examples/combination_tests/test_outputs/seasonality_stationary")
+OUTPUT_DIR = Path("examples/combination_tests/test_outputs/stationarity__single_multiple_seasonality")
 PLOT_DIR = OUTPUT_DIR / "plots"
 
 np.random.seed(SEED)

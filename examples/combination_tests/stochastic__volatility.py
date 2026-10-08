@@ -1,42 +1,63 @@
 """
 FINAL STATISTICAL VALIDATION
-Stationary + Volatility
+Stochastic + Volatility
 
 Tested combinations:
-    AR / MA / ARMA
-    x
-    ARCH / GARCH / EGARCH / APARCH
 
-Main idea
----------
-Volatility is used as the innovation/error process of the stationary model:
+    Random Walk
+    Random Walk with Drift
+    ARI
+    IMA
+    ARIMA
+
+    x
+
+    ARCH
+    GARCH
+    EGARCH
+    APARCH
+
+
+Mathematical idea
+-----------------
+
+RW:
+    ΔX_t = epsilon_t
+
+RWD:
+    ΔX_t = drift + epsilon_t
+
+ARI / IMA / ARIMA:
 
     volatility innovations
             ↓
        AR / MA / ARMA
             ↓
-        final series
+        integration
+            ↓
+       stochastic series
 
-We compare:
 
-1. SOURCE detection:
-   Is volatility detectable directly in the original
-   ARCH/GARCH/EGARCH/APARCH innovations?
+Validation idea
+---------------
 
-2. RECOVERED detection:
-   After the innovations pass through AR/MA/ARMA,
-   can we inverse-filter the final series and recover
-   the same volatility structure?
+We test volatility:
 
-If source and recovered detection rates are close,
-the stationary process is NOT destroying the volatility information.
+1. directly in the original SOURCE innovations;
 
-Gaussian controls are also generated.
-They show the false-positive rate of the statistical tests.
+2. after generating the full stochastic process,
+   differencing the final series and inverse-filtering
+   AR/MA/ARMA dynamics to obtain RECOVERED innovations.
+
+If source and recovered detection rates are nearly equal,
+the stochastic/integration process did not destroy the
+volatility information.
+
+Gaussian innovations are used as a negative control.
 
 Saved outputs
 -------------
-test_outputs/stationary_volatility/
+test_outputs/stochastic_volatility/
     detection_rates.csv
     gaussian_control.csv
     plots/
@@ -61,10 +82,12 @@ from betise.core.generator import TimeSeriesGenerator
 # SETTINGS
 # =========================================================
 
-STATIONARY_TYPES = [
-    "ar",
-    "ma",
-    "arma",
+STOCHASTIC_TYPES = [
+    "rw",
+    "rwd",
+    "ari",
+    "ima",
+    "arima",
 ]
 
 VOLATILITY_TYPES = [
@@ -80,46 +103,39 @@ N_TRIALS = 50
 TEST_LAG = 10
 ALPHA = 0.05
 
-# The beginning of an inverse-filtered signal may contain
-# initialization effects. We remove this short region.
 WARMUP = 50
 
 
 OUTPUT_DIR = Path(
-    "examples/combination_tests/test_outputs/stationary_volatility"
+    "examples/combination_tests/test_outputs/stochastic__volatility"
 )
 
 PLOT_DIR = OUTPUT_DIR / "plots"
 
 
 # =========================================================
-# RECOVER INNOVATIONS
+# RECOVER PRE-INTEGRATION PROCESS
 # =========================================================
 
-def recover_innovations(
+def recover_stationary_process(
     series,
-    stationary_kind,
+    stochastic_kind,
     info,
 ):
     """
-    Recover the underlying innovations from the final
-    stationary AR / MA / ARMA series.
+    Undo integration.
 
-    Example:
+    RW:
+        first difference
 
-        innovations
-            ↓
-          ARMA
-            ↓
-          series
+    RWD:
+        first difference - drift
 
-    We apply the inverse filter:
+    ARI / IMA / ARIMA:
+        difference d times
 
-        series
-            ↓
-      inverse ARMA
-            ↓
-       innovations
+    The result is the stationary process that existed
+    immediately before integration.
     """
 
     series = np.asarray(
@@ -127,11 +143,64 @@ def recover_innovations(
         dtype=float
     )
 
-    # -----------------------------------------------------
-    # AR
-    # -----------------------------------------------------
+    if stochastic_kind == "rw":
 
-    if stationary_kind == "ar":
+        return np.diff(
+            series
+        )
+
+    if stochastic_kind == "rwd":
+
+        drift = float(
+            info["drift"]
+        )
+
+        return (
+            np.diff(series)
+            - drift
+        )
+
+    d = int(
+        info["diff"]
+    )
+
+    return np.diff(
+        series,
+        n=d
+    )
+
+
+# =========================================================
+# RECOVER VOLATILITY INNOVATIONS
+# =========================================================
+
+def recover_innovations(
+    stationary_process,
+    stochastic_kind,
+    info,
+):
+    """
+    RW/RWD:
+        differenced series already equals innovations.
+
+    ARI/IMA/ARIMA:
+        inverse-filter the AR / MA / ARMA process
+        to recover the volatility innovations.
+    """
+
+    y = np.asarray(
+        stationary_process,
+        dtype=float
+    )
+
+    if stochastic_kind in {
+        "rw",
+        "rwd",
+    }:
+
+        return y
+
+    if stochastic_kind == "ari":
 
         ar_coefs = np.asarray(
             info["ar_coefs"],
@@ -150,14 +219,10 @@ def recover_innovations(
         return lfilter(
             ar,
             ma,
-            series
+            y
         )
 
-    # -----------------------------------------------------
-    # MA
-    # -----------------------------------------------------
-
-    if stationary_kind == "ma":
+    if stochastic_kind == "ima":
 
         ma_coefs = np.asarray(
             info["ma_coefs"],
@@ -176,14 +241,10 @@ def recover_innovations(
         return lfilter(
             ar,
             ma,
-            series
+            y
         )
 
-    # -----------------------------------------------------
-    # ARMA
-    # -----------------------------------------------------
-
-    if stationary_kind == "arma":
+    if stochastic_kind == "arima":
 
         ar_coefs = np.asarray(
             info["ar_coefs"],
@@ -208,37 +269,30 @@ def recover_innovations(
         return lfilter(
             ar,
             ma,
-            series
+            y
         )
 
     raise ValueError(
-        f"Unknown stationary type: "
-        f"{stationary_kind}"
+        f"Unknown stochastic type: "
+        f"{stochastic_kind}"
     )
 
 
 # =========================================================
-# VOLATILITY DETECTION
+# VOLATILITY TESTS
 # =========================================================
 
 def volatility_tests(
     residuals,
 ):
     """
-    Detect conditional heteroskedasticity.
+    ARCH-LM and squared Ljung-Box are used to detect
+    volatility clustering.
 
-    ARCH-LM:
-        Tests whether squared errors depend on previous
-        squared errors.
+    Small p-values indicate that squared innovations are
+    not behaving like independent constant-variance noise.
 
-    Squared Ljung-Box:
-        Tests whether squared errors contain serial
-        dependence.
-
-    A small p-value (< 0.05) suggests volatility clustering.
-
-    'any_detected' is True if at least one of the two
-    tests detects volatility.
+    any_detected=True if either test detects volatility.
     """
 
     x = np.asarray(
@@ -255,7 +309,6 @@ def volatility_tests(
         - np.mean(x)
     )
 
-    # ARCH-LM
     arch_result = het_arch(
         x,
         nlags=TEST_LAG
@@ -265,7 +318,6 @@ def volatility_tests(
         arch_result[1]
     )
 
-    # Ljung-Box on squared residuals
     lb_result = acorr_ljungbox(
         x ** 2,
         lags=[TEST_LAG],
@@ -302,11 +354,72 @@ def volatility_tests(
 
 
 # =========================================================
-# VOLATILITY TRIAL
+# GENERATE STOCHASTIC SERIES
+# =========================================================
+
+def generate_stochastic_from_innovations(
+    stochastic_kind,
+    innovations,
+):
+
+    ts = TimeSeriesGenerator(
+        length=LENGTH
+    )
+
+    if stochastic_kind == "rw":
+
+        df, info = (
+            ts.generate_stochastic_trend(
+                kind="rw",
+                innovations=innovations
+            )
+        )
+
+        d_used = 1
+
+    elif stochastic_kind == "rwd":
+
+        df, info = (
+            ts.generate_stochastic_trend(
+                kind="rwd",
+                drift=0.05,
+                innovations=innovations
+            )
+        )
+
+        d_used = 1
+
+    else:
+
+        # Test both supported integration orders.
+        d_used = int(
+            np.random.choice(
+                [1, 2]
+            )
+        )
+
+        df, info = (
+            ts.generate_stochastic_trend(
+                kind=stochastic_kind,
+                d=d_used,
+                const=False,
+                innovations=innovations
+            )
+        )
+
+    return (
+        df,
+        info,
+        d_used
+    )
+
+
+# =========================================================
+# SINGLE VOLATILITY TRIAL
 # =========================================================
 
 def run_volatility_trial(
-    stationary_kind,
+    stochastic_kind,
     volatility_kind,
 ):
 
@@ -314,7 +427,6 @@ def run_volatility_trial(
         length=LENGTH
     )
 
-    # Generate ARCH/GARCH/EGARCH/APARCH innovations
     innovations, _ = (
         ts.generate_volatility(
             kind=volatility_kind,
@@ -327,12 +439,10 @@ def run_volatility_trial(
         dtype=float
     )
 
-    # Use these innovations as the error process
-    # of AR / MA / ARMA.
-    df, stationary_info = (
-        ts.generate_stationary_base_series(
-            distribution=stationary_kind,
-            innovations=innovations
+    df, info, d_used = (
+        generate_stochastic_from_innovations(
+            stochastic_kind,
+            innovations
         )
     )
 
@@ -342,19 +452,24 @@ def run_volatility_trial(
         dtype=float
     )
 
-    # Recover innovations from final stationary series.
-    recovered = recover_innovations(
-        series,
-        stationary_kind,
-        stationary_info
+    stationary_process = (
+        recover_stationary_process(
+            series,
+            stochastic_kind,
+            info
+        )
     )
 
-    # Remove initialization transient.
+    recovered = recover_innovations(
+        stationary_process,
+        stochastic_kind,
+        info
+    )
+
     recovered = recovered[
         WARMUP:
     ]
 
-    # Match source length to recovered length.
     source = innovations[
         -len(recovered):
     ]
@@ -368,6 +483,9 @@ def run_volatility_trial(
     )
 
     return {
+        "d":
+            d_used,
+
         "source_ARCH":
             source_test[
                 "arch_detected"
@@ -405,21 +523,18 @@ def run_volatility_trial(
 # =========================================================
 
 def run_gaussian_control(
-    stationary_kind,
+    stochastic_kind,
 ):
     """
     Negative control.
 
-    Ordinary Gaussian innovations should NOT systematically
-    look heteroskedastic.
+    The same stochastic pipeline is generated using
+    ordinary Gaussian innovations.
 
-    Therefore this gives us the false-positive rate of our
-    statistical validation procedure.
+    False-positive rates tell us how often the statistical
+    tests incorrectly report volatility where none was
+    deliberately generated.
     """
-
-    ts = TimeSeriesGenerator(
-        length=LENGTH
-    )
 
     innovations = np.random.normal(
         0,
@@ -427,10 +542,10 @@ def run_gaussian_control(
         LENGTH
     )
 
-    df, stationary_info = (
-        ts.generate_stationary_base_series(
-            distribution=stationary_kind,
-            innovations=innovations
+    df, info, _ = (
+        generate_stochastic_from_innovations(
+            stochastic_kind,
+            innovations
         )
     )
 
@@ -440,25 +555,31 @@ def run_gaussian_control(
         dtype=float
     )
 
+    stationary_process = (
+        recover_stationary_process(
+            series,
+            stochastic_kind,
+            info
+        )
+    )
+
     recovered = recover_innovations(
-        series,
-        stationary_kind,
-        stationary_info
+        stationary_process,
+        stochastic_kind,
+        info
     )
 
     recovered = recovered[
         WARMUP:
     ]
 
-    result = volatility_tests(
+    return volatility_tests(
         recovered
     )
 
-    return result
-
 
 # =========================================================
-# REPEATED VOLATILITY VALIDATION
+# REPEATED VALIDATION
 # =========================================================
 
 def run_validation():
@@ -469,7 +590,7 @@ def run_validation():
         "\n========================================"
     )
     print(
-        "STATIONARY + VOLATILITY"
+        "STOCHASTIC + VOLATILITY"
     )
     print(
         "FINAL STATISTICAL VALIDATION"
@@ -478,13 +599,13 @@ def run_validation():
         "========================================\n"
     )
 
-    for stationary_kind in STATIONARY_TYPES:
+    for stochastic_kind in STOCHASTIC_TYPES:
 
         for volatility_kind in VOLATILITY_TYPES:
 
             print(
                 f"Running "
-                f"{stationary_kind.upper()} + "
+                f"{stochastic_kind.upper()} + "
                 f"{volatility_kind.upper()} ..."
             )
 
@@ -496,14 +617,23 @@ def run_validation():
             recovered_lb = 0
             recovered_any = 0
 
+            d1_count = 0
+            d2_count = 0
+
             for _ in range(
                 N_TRIALS
             ):
 
                 result = run_volatility_trial(
-                    stationary_kind,
+                    stochastic_kind,
                     volatility_kind
                 )
+
+                if result["d"] == 1:
+                    d1_count += 1
+
+                elif result["d"] == 2:
+                    d2_count += 1
 
                 source_arch += int(
                     result[
@@ -542,8 +672,8 @@ def run_validation():
                 )
 
             rows.append({
-                "stationary":
-                    stationary_kind,
+                "stochastic":
+                    stochastic_kind,
 
                 "volatility":
                     volatility_kind,
@@ -565,6 +695,12 @@ def run_validation():
 
                 "recovered_any":
                     recovered_any / N_TRIALS,
+
+                "d1_trials":
+                    d1_count,
+
+                "d2_trials":
+                    d2_count,
             })
 
     return pd.DataFrame(
@@ -573,40 +709,30 @@ def run_validation():
 
 
 # =========================================================
-# GAUSSIAN CONTROL VALIDATION
+# GAUSSIAN VALIDATION
 # =========================================================
 
 def run_gaussian_validation():
 
     rows = []
 
-    print(
-        "\n========================================"
-    )
-    print(
-        "GAUSSIAN CONTROL"
-    )
-    print(
-        "========================================\n"
-    )
+    for stochastic_kind in STOCHASTIC_TYPES:
 
-    for stationary_kind in STATIONARY_TYPES:
+        print(
+            f"Running Gaussian "
+            f"{stochastic_kind.upper()} ..."
+        )
 
         arch_count = 0
         lb_count = 0
         any_count = 0
-
-        print(
-            f"Running Gaussian "
-            f"{stationary_kind.upper()} ..."
-        )
 
         for _ in range(
             N_TRIALS
         ):
 
             result = run_gaussian_control(
-                stationary_kind
+                stochastic_kind
             )
 
             arch_count += int(
@@ -628,8 +754,8 @@ def run_gaussian_validation():
             )
 
         rows.append({
-            "stationary":
-                stationary_kind,
+            "stochastic":
+                stochastic_kind,
 
             "ARCH_false_positive":
                 arch_count / N_TRIALS,
@@ -655,34 +781,56 @@ def save_representative_plots():
     One representative 3-panel plot for each combination.
 
     Component 1:
-        Standalone stationary process.
+        Standalone stochastic process.
 
     Component 2:
         Volatility innovations.
 
     Combination:
-        Stationary process driven by those volatility innovations.
+        Stochastic process driven by those volatility innovations.
 
     NOTE:
         This is NOT an additive combination.
-        Volatility acts as the innovation process of AR/MA/ARMA.
+        Volatility is used as the innovation process.
     """
 
     PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
-    for stationary_kind in STATIONARY_TYPES:
+    for stochastic_kind in STOCHASTIC_TYPES:
         for volatility_kind in VOLATILITY_TYPES:
 
             # -------------------------------------------------
-            # COMPONENT 1 — standalone stationary
+            # Choose integration order
+            # -------------------------------------------------
+            if stochastic_kind in {"rw", "rwd"}:
+                d_used = 1
+            else:
+                d_used = int(np.random.choice([1, 2]))
+
+            # -------------------------------------------------
+            # COMPONENT 1 — standalone stochastic
             # -------------------------------------------------
             ts_base = TimeSeriesGenerator(length=LENGTH)
 
-            stationary_df, _ = ts_base.generate_stationary_base_series(
-                distribution=stationary_kind
-            )
+            if stochastic_kind == "rw":
+                stochastic_df, _ = ts_base.generate_stochastic_trend(
+                    kind="rw"
+                )
 
-            stationary_component = stationary_df["data"].to_numpy(dtype=float)
+            elif stochastic_kind == "rwd":
+                stochastic_df, _ = ts_base.generate_stochastic_trend(
+                    kind="rwd",
+                    drift=0.05
+                )
+
+            else:
+                stochastic_df, _ = ts_base.generate_stochastic_trend(
+                    kind=stochastic_kind,
+                    d=d_used,
+                    const=False
+                )
+
+            stochastic_component = stochastic_df["data"].to_numpy(dtype=float)
 
             # -------------------------------------------------
             # COMPONENT 2 — volatility innovations
@@ -699,10 +847,26 @@ def save_representative_plots():
             # -------------------------------------------------
             # COMBINATION
             # -------------------------------------------------
-            combined_df, _ = ts_combined.generate_stationary_base_series(
-                distribution=stationary_kind,
-                innovations=innovations
-            )
+            if stochastic_kind == "rw":
+                combined_df, _ = ts_combined.generate_stochastic_trend(
+                    kind="rw",
+                    innovations=innovations
+                )
+
+            elif stochastic_kind == "rwd":
+                combined_df, _ = ts_combined.generate_stochastic_trend(
+                    kind="rwd",
+                    drift=0.05,
+                    innovations=innovations
+                )
+
+            else:
+                combined_df, _ = ts_combined.generate_stochastic_trend(
+                    kind=stochastic_kind,
+                    d=d_used,
+                    const=False,
+                    innovations=innovations
+                )
 
             combined = combined_df["data"].to_numpy(dtype=float)
             time = np.arange(LENGTH)
@@ -712,17 +876,17 @@ def save_representative_plots():
             # -------------------------------------------------
             fig, axes = plt.subplots(3, 1, figsize=(12, 9), sharex=True)
 
-            axes[0].plot(time, stationary_component, linewidth=1.1)
+            axes[0].plot(time, stochastic_component, linewidth=1.1)
             axes[0].set_title(
-                f"{stationary_kind.upper()} + {volatility_kind.upper()} "
-                "— Component 1: Stationary"
+                f"{stochastic_kind.upper()} + {volatility_kind.upper()} "
+                "— Component 1: Stochastic"
             )
             axes[0].set_ylabel("Value")
             axes[0].grid(alpha=0.3)
 
             axes[1].plot(time, innovations, linewidth=1.1)
             axes[1].set_title(
-                f"{stationary_kind.upper()} + {volatility_kind.upper()} "
+                f"{stochastic_kind.upper()} + {volatility_kind.upper()} "
                 "— Component 2: Volatility Innovations"
             )
             axes[1].set_ylabel("Innovation")
@@ -730,8 +894,8 @@ def save_representative_plots():
 
             axes[2].plot(time, combined, linewidth=1.1)
             axes[2].set_title(
-                f"{stationary_kind.upper()} + {volatility_kind.upper()} "
-                "— Combination"
+                f"{stochastic_kind.upper()} + {volatility_kind.upper()} "
+                f"— Combination (d={d_used})"
             )
             axes[2].set_xlabel("Time")
             axes[2].set_ylabel("Value")
@@ -740,7 +904,7 @@ def save_representative_plots():
             plt.tight_layout()
 
             filename = (
-                f"{stationary_kind}_{volatility_kind}_components.png"
+                f"{stochastic_kind}_{volatility_kind}_components.png"
             )
 
             plt.savefig(
@@ -774,7 +938,6 @@ if __name__ == "__main__":
         run_gaussian_validation()
     )
 
-    # Save numerical results
     detection_results.to_csv(
         OUTPUT_DIR
         / "detection_rates.csv",
@@ -837,22 +1000,23 @@ if __name__ == "__main__":
 
     print(
         "source_any      : volatility detection "
-        "before AR/MA/ARMA filtering"
+        "in the original innovations"
     )
 
     print(
         "recovered_any   : volatility detection "
-        "after inverse-filtering the final series"
+        "after the complete stochastic pipeline"
     )
 
     print(
-        "Similar source/recovered rates mean that "
-        "the stationary model preserves volatility."
+        "Similar values mean integration and "
+        "AR/MA/ARMA dynamics preserved volatility."
     )
 
     print(
-        "Gaussian false-positive rates provide the "
-        "non-volatility baseline."
+        "Gaussian false-positive rates show how "
+        "often ordinary constant-variance noise "
+        "is incorrectly classified as volatile."
     )
 
     print(

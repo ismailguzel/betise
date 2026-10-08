@@ -58,8 +58,17 @@ def test_generate_dataframe_metadata_columns():
         "random_seed": SEED,
     })
     df, _ = generate_dataframe(cfg)
-    expected_cols = {"series_id", "time", "data", "primary_category",
-                     "sub_category", "base_series", "is_stationary"}
+    expected_cols = {
+        "series_id",
+        "time",
+        "data",
+        "is_stationary",
+        "base_components",
+        "base_families",
+        "composition_steps",
+        "feature_components",
+        "feature_families",
+    }
     assert expected_cols.issubset(df.columns)
 
 

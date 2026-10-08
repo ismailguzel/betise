@@ -104,7 +104,7 @@ SINGLE_CASES = [("single", (p,)) for p in PERIOD_POOL]
 MULTIPLE_CASES = [("multiple", pair) for pair in combinations(PERIOD_POOL, 2)]
 SEASONAL_CASES = SINGLE_CASES + MULTIPLE_CASES
 
-OUTPUT_DIR = Path("examples/combination_tests/test_outputs/arfima_seasonality")
+OUTPUT_DIR = Path("examples/combination_tests/test_outputs/arfima__single_multiple_seasonality")
 PLOT_DIR = OUTPUT_DIR / "plots"
 
 np.random.seed(SEED)

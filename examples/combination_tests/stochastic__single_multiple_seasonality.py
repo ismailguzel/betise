@@ -5,11 +5,11 @@ Seasonality + Stochastic
 Valid combinations
 ------------------
 Single:
-    RW / RWD / ARI / IMA
-    ARIMA + single excluded: redundant with deterministic SARIMA.
+    RW / RWD / ARI / IMA / ARIMA
 
 Multiple:
     RW / RWD / ARI / IMA / ARIMA
+
 
 Model
 -----
@@ -75,7 +75,7 @@ SINGLE_CASES = [("single", (p,)) for p in PERIOD_POOL]
 MULTIPLE_CASES = [("multiple", pair) for pair in combinations(PERIOD_POOL, 2)]
 SEASONAL_CASES = SINGLE_CASES + MULTIPLE_CASES
 
-OUTPUT_DIR = Path("examples/combination_tests/test_outputs/seasonality_stochastic")
+OUTPUT_DIR = Path("examples/combination_tests/test_outputs/stochastic__single_multiple_seasonality")
 PLOT_DIR = OUTPUT_DIR / "plots"
 
 np.random.seed(SEED)
@@ -93,8 +93,7 @@ def case_label(kind, periods):
 
 
 def is_valid_combination(kind, stochastic_kind):
-    # ARIMA + single is already represented by deterministic SARIMA.
-    return not (kind == "single" and stochastic_kind == "arima")
+    return True
 
 
 def stochastic_difference_order(stochastic_kind, info):

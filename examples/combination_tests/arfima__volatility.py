@@ -128,7 +128,7 @@ VOLATILITY_MODELS = [
     "aparch",
 ]
 
-OUTPUT_DIR = Path("examples/combination_tests/test_outputs/arfima_volatility")
+OUTPUT_DIR = Path("examples/combination_tests/test_outputs/arfima__volatility")
 PLOT_DIR = OUTPUT_DIR / "plots"
 
 np.random.seed(SEED)
