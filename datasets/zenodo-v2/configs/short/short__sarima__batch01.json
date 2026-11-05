@@ -1,0 +1,14 @@
+{
+  "mode": "requested",
+  "output_dir": "generated/zenodo-v2/short/short__sarima__batch01",
+  "base_components": [
+    "sarima"
+  ],
+  "features": [],
+  "num_series": 1000,
+  "categorical_mode": "sampled",
+  "variants_per_type": 32,
+  "seed": 1069166775,
+  "shard_size": 10,
+  "length_category": "short"
+}

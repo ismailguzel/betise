@@ -1,0 +1,14 @@
+{
+  "mode": "requested",
+  "output_dir": "generated/zenodo-v2/long/long__single_seasonality__batch01",
+  "base_components": [
+    "single_seasonality"
+  ],
+  "features": [],
+  "num_series": 1000,
+  "categorical_mode": "sampled",
+  "variants_per_type": 32,
+  "seed": 868862601,
+  "shard_size": 10,
+  "length_category": "long"
+}

@@ -1,105 +1,59 @@
-"""Verify the fixed release budget, categorical allocation and native configs."""
+"""Check the native configs distributed with the benchmark."""
 
-from copy import deepcopy
-import importlib.util
 import json
 from pathlib import Path
 
 import pytest
+from betise.run_scenario_generation import validate_requested_generation_config
+from betise.scenario_builder import build_type_scenario
 
 DIRECTORY = Path(__file__).resolve().parents[1] / 'datasets' / 'zenodo-v2'
-SPEC = importlib.util.spec_from_file_location('dataset_plan', DIRECTORY / 'build_plan.py')
-planner = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(planner)
+CONFIGS = sorted((DIRECTORY / 'configs').glob('*/*.json'))
+STATIONARY_BASES = {'ar', 'ma', 'arma', 'white_noise', 'sarma',
+                    'arch', 'garch', 'egarch', 'aparch'}
 
 
-@pytest.fixture
-def scope(monkeypatch):
-    value = json.loads((DIRECTORY / 'scope.json').read_text())
-    monkeypatch.setattr(planner.betise, '__version__', value['betise_version'])
-    return value
+def test_native_only_folder_and_total():
+    assert {p.name for p in DIRECTORY.iterdir()} == {'README.md', 'configs'}
+    assert len(CONFIGS) == 120
+    configs = [json.loads(p.read_text()) for p in CONFIGS]
+    assert sum(c['num_series'] for c in configs) == 120000
+    assert all(c['num_series'] == 1000 for c in configs)
+    assert len({c['seed'] for c in configs}) == 120
+    assert len({c['output_dir'] for c in configs}) == 120
 
 
-def test_fixed_120000_budget(scope):
-    plan = planner.build_plan(scope)
-    assert len(plan['rows']) == 120
-    assert plan['total_series'] == 120000
-    assert all(r['num_series'] == r['config']['num_series'] == 1000 for r in plan['rows'])
-    for s in plan['summaries']:
-        assert s['jobs'] == 40
-        assert s['planned_stationary'] == s['planned_nonstationary'] == 20000
-        assert s['total_series'] == 40000
+@pytest.mark.parametrize('category', ['short', 'medium', 'long'])
+def test_balance_and_paper_families(category):
+    configs = [json.loads(p.read_text()) for p in CONFIGS if p.parent.name == category]
+    assert len(configs) == 40
+    stationary = sum(c['num_series'] for c in configs
+                     if not c['features'] and set(c['base_components']) <= STATIONARY_BASES)
+    assert stationary == 20000
+    assert sum(c['num_series'] for c in configs) - stationary == 20000
+    assert {'white_noise', 'ar', 'ma', 'arma', 'random_walk', 'random_walk_drift',
+            'ari', 'ima', 'arima', 'single_seasonality', 'multiple_seasonality',
+            'sarma', 'sarima', 'arch', 'garch', 'egarch', 'aparch'} <= {
+                b for c in configs for b in c['base_components']}
+    assert {'linear_trend', 'quadratic_trend', 'cubic_trend', 'exponential_trend',
+            'damped_trend', 'mean_shift', 'variance_shift', 'trend_shift',
+            'point_anomaly', 'collective_anomaly', 'contextual_anomaly'} == {
+                f for c in configs for f in c['features']}
+    assert any(c['base_components'] == ['random_walk'] and
+               set(c['features']) == {'mean_shift', 'point_anomaly'} for c in configs)
 
 
-def test_recipes_share_the_budget(scope):
-    plan = planner.build_plan(scope)
-    for row in plan['rows']:
-        allocations = row['recipe_allocations']
-        assert 1 <= len(allocations) <= 32
-        assert sum(r['num_series'] for r in allocations) == 1000
-        assert max(r['num_series'] for r in allocations) - min(r['num_series'] for r in allocations) <= 1
-    point = next(r for r in plan['rows'] if r['scenario'] == 'point_anomaly' and r['length_category'] == 'medium')
-    assert len(point['recipe_allocations']) == 7
-    assert sum(r['num_series'] for r in point['recipe_allocations']) == 1000
-
-
-def test_balance_batches_are_explicit(scope):
-    plan = planner.build_plan(scope)
-    extra = [r for r in plan['rows'] if r['role'] == 'balance_batch']
-    assert len(extra) == 27
-    assert all(r['expected_is_stationary'] == 1 and not r['features'] for r in extra)
-    assert {r['scenario'] for r in extra} == {'ar', 'ma', 'arma', 'white_noise'}
-    assert len([r for r in plan['rows'] if r['role'] == 'coverage']) == 93
-
-
-def test_reproducible_seeds_and_configs(scope):
-    plan = planner.build_plan(scope)
-    assert plan == planner.build_plan(scope)
-    assert len({r['seed'] for r in plan['rows']}) == 120
-    assert len({r['id'] for r in plan['rows']}) == 120
-    assert all(r['seed'] == r['config']['seed'] for r in plan['rows'])
-
-
-def test_short_period_overrides(scope):
-    plan = planner.build_plan(scope)
-    rows = [r for r in plan['rows'] if r['params_overrides']]
-    assert len(rows) == 3
-    assert all(r['length_category'] == 'short' for r in rows)
-    assert plan['excluded_scenarios'] == []
-    for row in rows:
-        periods = row['params_overrides']['seasonality']
-        if 'single_seasonality' in periods:
-            assert periods['single_seasonality']['period'] == [7]
-        else:
-            assert periods['multiple_seasonality']['periods'] == [3, 7]
-
-
-def test_duplicate_canonical_scenario_is_rejected(scope):
-    duplicate = deepcopy(scope['scenarios'][0])
-    duplicate['id'] = 'another_name_for_ar'
-    scope['scenarios'].append(duplicate)
-    with pytest.raises(ValueError, match='Duplicate canonical scenario'):
-        planner.build_plan(scope)
-
-
-def test_wrong_quota_is_rejected(scope):
-    scope['scenarios'][0]['production_batches'] += 1
-    with pytest.raises(ValueError, match='binary quota'):
-        planner.build_plan(scope)
-
-
-def test_all_paper_families_and_combined_example_in_every_length(scope):
-    plan = planner.build_plan(scope)
-    alignment = scope['paper_alignment']
-    for category in scope['length_categories']:
-        rows = [r for r in plan['rows'] if r['length_category'] == category]
-        assert set(alignment['required_base_components']) <= {b for r in rows for b in r['base_components']}
-        assert set(alignment['required_overlays']) <= {f for r in rows for f in r['features']}
-        assert any(r['base_components'] == ['random_walk'] and
-                   set(r['features']) == {'mean_shift', 'point_anomaly'} for r in rows)
-
-
-def test_missing_paper_family_is_rejected(scope):
-    next(s for s in scope['scenarios'] if s['id'] == 'aparch')['production_batches'] = 0
-    with pytest.raises(ValueError, match='Missing paper taxonomy'):
-        planner.build_plan(scope)
+@pytest.mark.parametrize('path', CONFIGS, ids=lambda p: p.stem)
+def test_native_validation(path):
+    config = json.loads(path.read_text())
+    validate_requested_generation_config(config)
+    # Exact lengths of 50--100 also use the library's short-series policy.
+    build_type_scenario(config['base_components'], config['features'],
+                        length_category=path.parent.name)
+    if 'length' in config:
+        assert path.parent.name == 'short'
+        assert config['length'] == 100
+        assert any(name in path.stem for name in
+                   ('single_seasonality', 'multiple_seasonality', 'contextual_anomaly'))
+    else:
+        assert config['length_category'] == path.parent.name

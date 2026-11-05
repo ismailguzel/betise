@@ -1,0 +1,14 @@
+{
+  "mode": "requested",
+  "output_dir": "generated/zenodo-v2/short/short__aparch__batch01",
+  "base_components": [
+    "aparch"
+  ],
+  "features": [],
+  "num_series": 1000,
+  "categorical_mode": "sampled",
+  "variants_per_type": 32,
+  "seed": 125530624,
+  "shard_size": 10,
+  "length_category": "short"
+}

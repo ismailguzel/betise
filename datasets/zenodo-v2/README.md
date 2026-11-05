@@ -1,32 +1,30 @@
 # Generate the BeTiSe benchmark
 
-Generate 120,000 new series with BeTiSe 0.6.1: 40,000 each at short (50–100),
-medium (300–500) and long (1,000–10,000) lengths. Each length group contains
-20,000 stationary and 20,000 non-stationary series under the generation-label convention.
+These native BeTiSe configs generate 120,000 new series: 40,000 per length group,
+with 20,000 stationary and 20,000 non-stationary series per group under the
+generation-label convention. Each of the 120 configs generates 1,000 series.
+This is a new realization of the benchmark, not the original archived numerical series.
 
-Use Python 3.11 in an activated virtual environment. From the repository root:
-
-```bash
-python -m pip install -r datasets/zenodo-v2/requirements.txt
-```
-
-Try a small run first (240 series):
+Use an activated Python 3.11 environment. From the repository root:
 
 ```bash
-python datasets/zenodo-v2/prepare.py --profile pilot --output generated/pilot
-python datasets/zenodo-v2/run.py generated/pilot
+python -m pip install betise==0.6.1
+python -m betise.run_scenario_generation datasets/zenodo-v2/configs/short/short__ar__batch01.json
 ```
 
-Generate the full dataset:
+To run all configs:
 
 ```bash
-python datasets/zenodo-v2/prepare.py --profile candidate --output generated/dataset
-python datasets/zenodo-v2/run.py generated/dataset
+for config in datasets/zenodo-v2/configs/*/*.json; do
+    python -m betise.run_scenario_generation "$config" || break
+done
 ```
 
-Settings are in [scope.json](scope.json). Outputs are Parquet shards with metadata;
-logs and checksums are saved alongside them. Rerun the same command to skip completed
-jobs. Use `(job_id, series_id)` as the global series identifier when merging jobs.
+Lengths are short (50–100), medium (300–500), and long (1,000–10,000).
+The three short configs for single seasonality, multiple seasonality, and contextual
+anomaly use exactly 100 time steps so the library's default seasonal periods fit.
+No library changes or parameter overrides are needed.
 
-The managed runner applies the configured short-seasonal periods. This produces a
-new realization of the benchmark, not the original archived numerical series.
+Outputs are Parquet shards under `generated/zenodo-v2/`, separated by config.
+Use `(config filename, series_id)` as the global identifier when combining them.
+Rerunning a config can overwrite its output; there is no custom resume runner.

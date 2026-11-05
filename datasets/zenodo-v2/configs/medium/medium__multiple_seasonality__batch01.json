@@ -1,0 +1,14 @@
+{
+  "mode": "requested",
+  "output_dir": "generated/zenodo-v2/medium/medium__multiple_seasonality__batch01",
+  "base_components": [
+    "multiple_seasonality"
+  ],
+  "features": [],
+  "num_series": 1000,
+  "categorical_mode": "sampled",
+  "variants_per_type": 32,
+  "seed": 2930435818,
+  "shard_size": 10,
+  "length_category": "medium"
+}

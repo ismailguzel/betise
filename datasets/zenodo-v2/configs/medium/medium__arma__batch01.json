@@ -1,0 +1,14 @@
+{
+  "mode": "requested",
+  "output_dir": "generated/zenodo-v2/medium/medium__arma__batch01",
+  "base_components": [
+    "arma"
+  ],
+  "features": [],
+  "num_series": 1000,
+  "categorical_mode": "sampled",
+  "variants_per_type": 32,
+  "seed": 1912717093,
+  "shard_size": 10,
+  "length_category": "medium"
+}

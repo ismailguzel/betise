@@ -1,0 +1,16 @@
+{
+  "mode": "requested",
+  "output_dir": "generated/zenodo-v2/medium/medium__mean_shift__batch01",
+  "base_components": [
+    "ar"
+  ],
+  "features": [
+    "mean_shift"
+  ],
+  "num_series": 1000,
+  "categorical_mode": "sampled",
+  "variants_per_type": 32,
+  "seed": 1185870644,
+  "shard_size": 10,
+  "length_category": "medium"
+}

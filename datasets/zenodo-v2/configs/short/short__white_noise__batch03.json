@@ -1,0 +1,14 @@
+{
+  "mode": "requested",
+  "output_dir": "generated/zenodo-v2/short/short__white_noise__batch03",
+  "base_components": [
+    "white_noise"
+  ],
+  "features": [],
+  "num_series": 1000,
+  "categorical_mode": "sampled",
+  "variants_per_type": 32,
+  "seed": 676581121,
+  "shard_size": 10,
+  "length_category": "short"
+}
