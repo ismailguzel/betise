@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "betise"
-version = "0.6.0"
+version = "0.6.1"
 description = "BeTiSe — Benchmark Time Series Generator for synthetic dataset creation"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -67,6 +67,7 @@ docs = [
 Homepage      = "https://github.com/ismailguzel/betise"
 Repository    = "https://github.com/ismailguzel/betise"
 "Bug Tracker" = "https://github.com/ismailguzel/betise/issues"
+Paper         = "https://doi.org/10.3390/cmsf2026016024"
 Dataset       = "https://doi.org/10.5281/zenodo.18513505"
 
 [tool.setuptools.packages.find]

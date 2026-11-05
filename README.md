@@ -79,11 +79,11 @@ Full usage guide, config reference, and ready-to-run examples are on GitHub:
 
 | Document | Contents |
 |----------|----------|
-| [USAGE.md](USAGE.md) | Base series, feature overlays, output format, and the canonical catalog |
-| [docs/REQUESTED_GENERATION_QUICKREF.md](docs/REQUESTED_GENERATION_QUICKREF.md) | Generating N series from one exact combination — short reference |
-| [docs/REQUESTED_GENERATION_GUIDE.md](docs/REQUESTED_GENERATION_GUIDE.md) | The same workflow in full detail |
-| [docs/combination-rules/](docs/combination-rules/) | Which base/feature combinations are valid, per base family |
-| [APPENDIX.md](APPENDIX.md) | Paper appendix — metadata schema, generation templates, LLM prompts, example figures |
+| [USAGE.md](https://github.com/ismailguzel/betise/blob/main/USAGE.md) | Base series, feature overlays, output format, and the canonical catalog |
+| [docs/REQUESTED_GENERATION_QUICKREF.md](https://github.com/ismailguzel/betise/blob/main/docs/REQUESTED_GENERATION_QUICKREF.md) | Generating N series from one exact combination — short reference |
+| [docs/REQUESTED_GENERATION_GUIDE.md](https://github.com/ismailguzel/betise/blob/main/docs/REQUESTED_GENERATION_GUIDE.md) | The same workflow in full detail |
+| [docs/combination-rules/](https://github.com/ismailguzel/betise/tree/main/docs/combination-rules/) | Which base/feature combinations are valid, per base family |
+| [APPENDIX.md](https://github.com/ismailguzel/betise/blob/main/APPENDIX.md) | Paper appendix — metadata schema, generation templates, LLM prompts, example figures |
 
 ## Citation
 
