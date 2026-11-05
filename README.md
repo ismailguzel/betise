@@ -4,7 +4,8 @@ A Python library for generating synthetic time series datasets with configurable
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18513505.svg)](https://doi.org/10.5281/zenodo.18513505)
+[![Paper DOI](https://img.shields.io/badge/Paper%20DOI-10.3390%2Fcmsf2026016024-blue)](https://doi.org/10.3390/cmsf2026016024)
+[![Dataset DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18513505.svg)](https://doi.org/10.5281/zenodo.18513505)
 
 ## Installation
 
@@ -19,7 +20,7 @@ from betise import generate_dataframe, load_config
 
 cfg = load_config(dataset={"base_series": "arma", "num_series": 5, "length_range": [300, 500]})
 df, ctx = generate_dataframe(cfg)
-print(df[["series_id", "time", "data", "primary_category"]].head())
+print(df[["series_id", "time", "data", "base_components"]].head())
 ```
 
 Save to parquet and add feature overlays:
@@ -61,12 +62,15 @@ Multiple features can be stacked on top of any base type:
 | Anomaly | `point_anomaly`, `collective_anomaly`, `contextual_anomaly` |
 | Structural break | `mean_shift`, `variance_shift`, `trend_shift` |
 
-## Published Dataset
+## Publication & Dataset
+
+The BeTiSe paper is published in *Computer Sciences & Mathematics Forum*, 2026, 16(1), Article 24:
+
+**[BeTiSe: A Comprehensive Benchmark Dataset for Univariate Time Series Stationarity and Structural Analysis](https://doi.org/10.3390/cmsf2026016024)**
 
 A large-scale benchmark dataset (120,000 series, 23.8 GB) generated with BeTiSe is available on Zenodo:
 
-- **DOI**: [10.5281/zenodo.18513505](https://doi.org/10.5281/zenodo.18513505)
-- **Conference**: Submitted to [ITISE 2026](https://itise.ugr.es/)
+- **Dataset DOI**: [10.5281/zenodo.18513505](https://doi.org/10.5281/zenodo.18513505)
 
 ## Documentation & Examples
 
@@ -83,9 +87,29 @@ Full usage guide, config reference, and ready-to-run examples are on GitHub:
 
 ## Citation
 
+Please cite the paper when using BeTiSe:
+
+Gür, K., Yazıcı, P., Erkaya, P., Türkmen, Y., Baytak, B., Güzel, İ., Karagöz, P., & Yozgatlıgil, C. (2026). BeTiSe: A comprehensive benchmark dataset for univariate time series stationarity and structural analysis. *Computer Sciences & Mathematics Forum, 16*(1), Article 24. https://doi.org/10.3390/cmsf2026016024
+
+```bibtex
+@article{gur2026betise,
+  author  = {Gür, Kerem R and Yazıcı, P. Cemre and Erkaya, Pelin and Türkmen, Yağmur and Baytak, Berke and Güzel, İsmail and Karagöz, Pınar and Yozgatlıgil, Ceylan},
+  title   = {{BeTiSe}: A Comprehensive Benchmark Dataset for Univariate Time Series Stationarity and Structural Analysis},
+  journal = {Computer Sciences & Mathematics Forum},
+  year    = {2026},
+  volume  = {16},
+  number  = {1},
+  pages   = {24},
+  doi     = {10.3390/cmsf2026016024},
+  url     = {https://doi.org/10.3390/cmsf2026016024}
+}
+```
+
+If you use the published benchmark dataset, please also cite its Zenodo record:
+
 ```bibtex
 @dataset{betise2026,
-  author    = {Kerem R Gür, P. Cemre Yazıcı, Pelin Erkaya, Yağmur Türkmen, Berke Baytak, İsmail Güzel, Pınar Karagöz and Ceylan Yozgatlıgil},
+  author    = {Gür, Kerem R and Yazıcı, P. Cemre and Erkaya, Pelin and Türkmen, Yağmur and Baytak, Berke and Güzel, İsmail and Karagöz, Pınar and Yozgatlıgil, Ceylan},
   title     = {{BeTiSe: A Benchmark Time Series Dataset for Stationarity
                 and Structural Analysis}},
   year      = {2026},
