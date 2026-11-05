@@ -87,7 +87,7 @@ Full usage guide, config reference, and ready-to-run examples are on GitHub:
 
 ## Reproduction Package
 
-[Download the reproduction package](reproduction-packages/betise-reproduction-v1.0.0.zip)
+[Download the reproduction package](reproduction-packages/betise-reproduction-v1.1.0.zip)
 or follow the [generation instructions](datasets/zenodo-v2/README.md) to generate
 120,000 series with BeTiSe 0.6.1.
 

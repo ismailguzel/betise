@@ -1,13 +1,12 @@
 # BeTiSe reproduction package
 
-`betise-reproduction-v1.0.0.zip` is a standalone recipe for generating 120,000 new
-series with BeTiSe 0.6.1. It includes configs, required scripts, pinned dependencies,
-validation documentation and six small example series. It does not contain the
-historical bulk dataset or reproduce the paper's experimental results.
+[Download the config package](betise-reproduction-v1.1.0.zip), extract it, and follow
+its README using BeTiSe 0.6.1. It contains only 120 native JSON configs, a short
+README, and the license. No helper scripts or library modifications are required.
 
-Extract the ZIP and follow its root `README.md` using Python 3.11.
-`SHA256SUMS` records the download checksum. The code and config sources are in
-[`datasets/zenodo-v2`](../datasets/zenodo-v2).
+The configs generate 120,000 new series, not the original archived numerical series
+or the paper's experimental results. Sources: [`datasets/zenodo-v2`](../datasets/zenodo-v2).
+`SHA256SUMS` records the download checksum.
 
-The existing Zenodo record is supplemented through metadata links; no new Zenodo
-record/version or DOI is created by distributing this package.
+The previous v1.0.0 package remains available through its existing fixed Git commit
+link used by Zenodo. It contains the earlier script-based workflow.
