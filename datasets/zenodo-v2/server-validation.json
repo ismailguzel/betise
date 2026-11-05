@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-05",
+  "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+  "python": "3.11.16",
+  "betise_version": "0.6.1",
+  "jobs_passed": 120,
+  "series_passed": 7680,
+  "parquet_bytes": 229340645,
+  "generation_seconds": 251.25,
+  "full_dataset_generated": false,
+  "categories": {
+    "short": {
+      "jobs": 40,
+      "series": 2560,
+      "rows": 192367,
+      "parquet_bytes": 15395592
+    },
+    "medium": {
+      "jobs": 40,
+      "series": 2560,
+      "rows": 1021390,
+      "parquet_bytes": 24605649
+    },
+    "long": {
+      "jobs": 40,
+      "series": 2560,
+      "rows": 14033670,
+      "parquet_bytes": 189339404
+    }
+  },
+  "tested_workflow_hashes": {
+    "generate.py": "242764d7bcf747e3fc5f932dc17e61896620cca59a996ac7319a1bbb79758d0c",
+    "run.py": "52d5a8469c9028124a9d0ce3083dff6da1b73f6ef566e947a87a3243d6e402f9",
+    "prepare.py": "9fe2d3662017a77755cf4e2672b21872f13be3d4750093428623c0ddcd1a05a3",
+    "build_plan.py": "db8208b3cc3ece0fbf11b0f5d9533b910d28b6c18534eea03b61a21f8c3bac70"
+  }
+}

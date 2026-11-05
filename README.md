@@ -85,6 +85,14 @@ Full usage guide, config reference, and ready-to-run examples are on GitHub:
 | [docs/combination-rules/](https://github.com/ismailguzel/betise/tree/main/docs/combination-rules/) | Which base/feature combinations are valid, per base family |
 | [APPENDIX.md](https://github.com/ismailguzel/betise/blob/main/APPENDIX.md) | Paper appendix — metadata schema, generation templates, LLM prompts, example figures |
 
+## Reproduction Package
+
+The [120,000-series reproduction workflow](datasets/zenodo-v2/REPRODUCE.md) provides
+versioned configs, pinned dependencies, generation scripts and validation reports
+for generating a new benchmark with BeTiSe 0.6.1. It preserves the paper's property
+families with an explicit updated allocation; it does not reproduce the original
+numerical series or reported experimental results.
+
 ## Citation
 
 Please cite the paper when using BeTiSe:
