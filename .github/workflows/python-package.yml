@@ -8,7 +8,8 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Keep Python 3.9 available when ubuntu-latest advances.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
