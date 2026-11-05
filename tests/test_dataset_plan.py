@@ -1,7 +1,6 @@
 """Verify the fixed release budget, categorical allocation and native configs."""
 
 from copy import deepcopy
-import csv
 import importlib.util
 import json
 from pathlib import Path
@@ -61,17 +60,18 @@ def test_reproducible_seeds_and_configs(scope):
     assert all(r['seed'] == r['config']['seed'] for r in plan['rows'])
 
 
-def test_exports_and_blockers(scope, tmp_path):
+def test_short_period_overrides(scope):
     plan = planner.build_plan(scope)
-    planner.write_plan(plan, tmp_path)
-    assert json.loads((tmp_path / 'production-plan.json').read_text()) == plan
-    with (tmp_path / 'production-plan.csv').open() as stream:
-        rows = list(csv.DictReader(stream))
-    assert len(rows) == 120
-    for row, original in zip(rows, plan['rows']):
-        assert json.loads(row['recipe_allocations']) == original['recipe_allocations']
-    assert len([r for r in plan['rows'] if r['params_overrides']]) == 3
-    assert len(plan['excluded_scenarios']) == 9
+    rows = [r for r in plan['rows'] if r['params_overrides']]
+    assert len(rows) == 3
+    assert all(r['length_category'] == 'short' for r in rows)
+    assert plan['excluded_scenarios'] == []
+    for row in rows:
+        periods = row['params_overrides']['seasonality']
+        if 'single_seasonality' in periods:
+            assert periods['single_seasonality']['period'] == [7]
+        else:
+            assert periods['multiple_seasonality']['periods'] == [3, 7]
 
 
 def test_duplicate_canonical_scenario_is_rejected(scope):

@@ -2,10 +2,7 @@
   "betise_version": "0.6.1",
   "status": "ready_for_generation",
   "paper_doi": "10.3390/cmsf2026016024",
-  "previous_dataset_doi": "10.5281/zenodo.18513505",
   "base_seed": 20261105,
-  "categorical_mode": "sampled",
-  "variants_per_type": 32,
   "shard_size": 10,
   "length_categories": {
     "short": [
@@ -40,11 +37,8 @@
         "ar"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 4,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 4
     },
     {
       "id": "ma",
@@ -53,11 +47,8 @@
         "ma"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 3,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 3
     },
     {
       "id": "arma",
@@ -66,11 +57,8 @@
         "arma"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 3,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 3
     },
     {
       "id": "white_noise",
@@ -79,11 +67,8 @@
         "white_noise"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 3,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 3
     },
     {
       "id": "random_walk",
@@ -92,11 +77,8 @@
         "random_walk"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "random_walk_drift",
@@ -105,11 +87,8 @@
         "random_walk_drift"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "ari",
@@ -118,11 +97,8 @@
         "ari"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "ima",
@@ -131,11 +107,8 @@
         "ima"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "arima",
@@ -144,11 +117,8 @@
         "arima"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "single_seasonality",
@@ -157,11 +127,8 @@
         "single_seasonality"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "multiple_seasonality",
@@ -170,11 +137,8 @@
         "multiple_seasonality"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "sarma",
@@ -183,11 +147,8 @@
         "sarma"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "sarima",
@@ -196,11 +157,8 @@
         "sarima"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "arch",
@@ -209,11 +167,8 @@
         "arch"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "garch",
@@ -222,11 +177,8 @@
         "garch"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "egarch",
@@ -235,11 +187,8 @@
         "egarch"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "aparch",
@@ -248,11 +197,8 @@
         "aparch"
       ],
       "features": [],
-      "source": "Paper sections 3.1-3.3; separate job per named base model is a v2 allocation choice.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "linear_trend",
@@ -263,11 +209,8 @@
       "features": [
         "linear_trend"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "quadratic_trend",
@@ -278,11 +221,8 @@
       "features": [
         "quadratic_trend"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "cubic_trend",
@@ -293,11 +233,8 @@
       "features": [
         "cubic_trend"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "exponential_trend",
@@ -308,11 +245,8 @@
       "features": [
         "exponential_trend"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "damped_trend",
@@ -323,11 +257,8 @@
       "features": [
         "damped_trend"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "mean_shift",
@@ -338,11 +269,8 @@
       "features": [
         "mean_shift"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "variance_shift",
@@ -353,11 +281,8 @@
       "features": [
         "variance_shift"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "trend_shift",
@@ -369,11 +294,8 @@
         "linear_trend",
         "trend_shift"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "point_anomaly",
@@ -384,11 +306,8 @@
       "features": [
         "point_anomaly"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "collective_anomaly",
@@ -399,11 +318,8 @@
       "features": [
         "collective_anomaly"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "contextual_anomaly",
@@ -414,56 +330,8 @@
       "features": [
         "contextual_anomaly"
       ],
-      "source": "Paper sections 3.2/3.4 plus APPENDIX.md sections A/B; representative base choice proposed for v2.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
-    },
-    {
-      "id": "seasonal_point",
-      "group": "combined",
-      "base_components": [
-        "sarma"
-      ],
-      "features": [
-        "point_anomaly"
-      ],
-      "source": "Appendix B template 13/14; categorical sampling covers directions and counts.",
-      "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 0,
-      "selection_note": "Omitted from the compact release budget; anomaly types remain covered by individual-property jobs, including seasonal contextual anomalies."
-    },
-    {
-      "id": "seasonal_collective",
-      "group": "combined",
-      "base_components": [
-        "sarima"
-      ],
-      "features": [
-        "collective_anomaly"
-      ],
-      "source": "Appendix B template 15; updated canonical seasonal base.",
-      "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 0,
-      "selection_note": "Omitted from the compact release budget; anomaly types remain covered by individual-property jobs, including seasonal contextual anomalies."
-    },
-    {
-      "id": "seasonal_contextual",
-      "group": "combined",
-      "base_components": [
-        "multiple_seasonality"
-      ],
-      "features": [
-        "contextual_anomaly"
-      ],
-      "source": "Appendix B template 16.",
-      "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 0,
-      "selection_note": "Omitted from the compact release budget; anomaly types remain covered by individual-property jobs, including seasonal contextual anomalies."
+      "production_batches": 1
     },
     {
       "id": "stochastic_mean_point",
@@ -475,11 +343,8 @@
         "mean_shift",
         "point_anomaly"
       ],
-      "source": "Paper section 4 explicitly describes a stochastic trend with structural breaks and point anomalies; random_walk and mean_shift are v2 representative choices.",
       "expected_is_stationary": 0,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected to represent the combined example explicitly described in paper section 4."
+      "production_batches": 1
     },
     {
       "id": "arma_garch",
@@ -489,11 +354,8 @@
         "garch"
       ],
       "features": [],
-      "source": "Appendix B template 11.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     },
     {
       "id": "ma_egarch",
@@ -503,46 +365,23 @@
         "egarch"
       ],
       "features": [],
-      "source": "Appendix B template 12.",
       "expected_is_stationary": 1,
-      "stationarity_review": "provisional: observed in initial medium pilot; parameter-level scientific audit pending",
-      "production_batches": 1,
-      "selection_note": "Selected for the 120,000-series release proposal."
+      "production_batches": 1
     }
   ],
-  "paper_source": {
-    "doi": "10.3390/cmsf2026016024",
-    "filename": "csmf-16-00024.pdf",
-    "sha256": "a70e52b0f0ce87f6d74e8a1fb889b1a699193b3a5ef43e13b60230d3e33baef5",
-    "reviewed_sections": [
-      "3.1-3.5",
-      "4",
-      "5.1",
-      "7.4"
-    ],
-    "constraints": {
-      "series_per_configuration": 1000,
-      "stationary_nonstationary_balance": "equal; mapping and allocation pending review"
-    }
-  },
   "production_plan": {
     "categorical_mode": "sampled",
     "variants_per_type": 32,
     "series_per_configuration": 1000,
     "stationarity_assignment": "provisional_metadata_mapping_from_initial_pilot",
-    "balance_policy": "explicit_1000_series_baseline_batches",
-    "status": "ready_for_generation",
-    "notes": "One production job is a base/overlay configuration at a length category with an explicit seed and categorical sampling policy. Realizations are shared across recipes, not multiplied by recipe count."
+    "balance_policy": "explicit_1000_series_baseline_batches"
   },
   "target_release": {
-    "status": "current_design",
     "total_series": 120000,
     "stationary_per_length_category": 20000,
-    "nonstationary_per_length_category": 20000,
-    "note": "User-selected total. Equal allocation across three lengths is a v2 choice; not a recovered historical manifest."
+    "nonstationary_per_length_category": 20000
   },
   "paper_alignment": {
-    "taxonomy_source": "Paper Table 2 and sections 3.1-3.4",
     "required_base_components": [
       "white_noise",
       "ar",
@@ -583,8 +422,7 @@
         "mean_shift",
         "point_anomaly"
       ]
-    },
-    "claims": "Taxonomy and representative compound coverage; not an exact historical configuration or parameter reproduction."
+    }
   },
   "parameter_overrides_by_length": {
     "short": {
@@ -603,7 +441,5 @@
       }
     }
   },
-  "seasonal_override_rationale": "Explicit dataset-specific short periods preserve 50-100 observations and the existing six-cycle minimum. Medium/long and the published BeTiSe package are unchanged.",
-  "validation_scope": "Runnable reproduction recipe: structural, declared metadata and categorical-count checks passed; not a claim of reproduced paper results or empirical stationarity certification.",
   "specification_version": "1.0.0"
 }
